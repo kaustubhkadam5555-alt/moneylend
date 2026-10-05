@@ -1,0 +1,28 @@
+# Operating System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor & IDE settings
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# Logs and temporary files
+*.log
+/logs/
+/tmp/
+*.tmp
+*.bak
+
+# Environment / local config overrides (if used in future)
+*.local.php
+.env
