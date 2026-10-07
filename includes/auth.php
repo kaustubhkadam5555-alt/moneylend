@@ -12,16 +12,32 @@ if (!defined('APP_NAME')) {
 }
 
 // Start PHP session securely if not already active
-if (session_status() === PHP_SESSION_NONE) {
+if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+    // Session hardening directives
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
+
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443);
+
     // Configure session cookie parameters
     session_set_cookie_params([
         'lifetime' => 0,               // Session lasts until browser closes
         'path'     => BASE_URL,
         'httponly' => true,            // Mitigate XSS cookie theft
         'samesite' => 'Lax',           // Mitigate CSRF
+        'secure'   => $isHttps,        // Enable Secure flag when HTTPS is active
     ]);
 
     session_start();
+}
+
+// Send standard defense-in-depth security headers if not already sent
+if (!headers_sent()) {
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+    header('X-XSS-Protection: 1; mode=block');
 }
 
 /**
@@ -134,6 +150,25 @@ function get_flash(): ?array {
 }
 
 /**
+ * Safely redirect to a URL and terminate script execution.
+ *
+ * @param string $url
+ * @return void
+ */
+function redirect(string $url): void {
+    // Sanitize destination to prevent CRLF header injection
+    $cleanUrl = str_replace(["\r", "\n"], '', $url);
+
+    // Prevent open redirects via protocol-relative URLs (e.g. //attacker.com)
+    if (str_starts_with($cleanUrl, '//') || str_starts_with($cleanUrl, '/\\')) {
+        $cleanUrl = BASE_URL;
+    }
+
+    header("Location: " . $cleanUrl);
+    exit;
+}
+
+/**
  * Helper to safely sanitize and escape text for HTML output.
  *
  * @param mixed $data
@@ -141,4 +176,49 @@ function get_flash(): ?array {
  */
 function sanitize($data): string {
     return htmlspecialchars((string)($data ?? ''), ENT_QUOTES, 'UTF-8');
+}
+
+
+/**
+ * Generate or retrieve the CSRF token for the session.
+ *
+ * @return string
+ */
+function csrf_token(): string {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * Alias for csrf_token() for consistency across modules.
+ *
+ * @return string
+ */
+function generate_csrf_token(): string {
+    return csrf_token();
+}
+
+
+/**
+ * Validate a submitted CSRF token.
+ *
+ * @param string|null $token
+ * @return bool
+ */
+function verify_csrf_token(?string $token): bool {
+    if (empty($token) || empty($_SESSION['csrf_token'])) {
+        return false;
+    }
+    return hash_equals($_SESSION['csrf_token'], $token);
+}
+
+/**
+ * Generate hidden input HTML field for CSRF token.
+ *
+ * @return string
+ */
+function csrf_field(): string {
+    return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') . '">';
 }

@@ -21,10 +21,30 @@
                 <span class="brand-text">Money<span>Lend</span></span>
             </a>
 
+<?php
+// Resolve current section metadata for navbar breadcrumb indicator
+$currentScript = $_SERVER['SCRIPT_NAME'] ?? ($_SERVER['PHP_SELF'] ?? '');
+$navSection = [
+    'title' => 'Dashboard',
+    'url'   => BASE_URL . 'dashboard.php',
+    'icon'  => 'fa-gauge-high'
+];
+if (str_contains($currentScript, '/borrowers/')) {
+    $navSection = ['title' => 'Borrowers', 'url' => BASE_URL . 'borrowers/', 'icon' => 'fa-users'];
+} elseif (str_contains($currentScript, '/loans/')) {
+    $navSection = ['title' => 'Loans', 'url' => BASE_URL . 'loans/', 'icon' => 'fa-file-invoice-dollar'];
+} elseif (str_contains($currentScript, '/repayments/')) {
+    $navSection = ['title' => 'Repayments', 'url' => BASE_URL . 'repayments/', 'icon' => 'fa-money-bill-wave'];
+} elseif (str_contains($currentScript, '/reports/')) {
+    $navSection = ['title' => 'Reports & Analytics', 'url' => BASE_URL . 'reports/', 'icon' => 'fa-chart-line'];
+} elseif (str_contains($currentScript, '/settings/')) {
+    $navSection = ['title' => 'Settings', 'url' => BASE_URL . 'settings/', 'icon' => 'fa-gear'];
+}
+?>
             <!-- Quick breadcrumb / indicator on desktop -->
             <div class="d-none d-md-flex align-items-center ms-3 ps-3 border-start">
-                <a href="<?php echo BASE_URL; ?>dashboard.php" class="text-decoration-none text-secondary fw-semibold small">
-                    <i class="fa-solid fa-gauge-high me-1 text-primary"></i> Dashboard
+                <a href="<?php echo htmlspecialchars($navSection['url']); ?>" class="text-decoration-none text-secondary fw-semibold small">
+                    <i class="fa-solid <?php echo htmlspecialchars($navSection['icon']); ?> me-1 text-primary"></i> <?php echo htmlspecialchars($navSection['title']); ?>
                 </a>
             </div>
         </div>
@@ -32,7 +52,7 @@
         <!-- Right: User Area & Logout -->
         <div class="d-flex align-items-center gap-3 ms-auto">
             <!-- User Profile Display -->
-            <div class="d-flex align-items-center gap-2">
+            <a href="<?php echo BASE_URL; ?>settings/" class="d-flex align-items-center gap-2 text-decoration-none" title="Manage Profile & Settings" aria-label="Manage Profile & Settings">
                 <div class="navbar-user-avatar" title="<?php echo htmlspecialchars($currentUser['email'] ?? ''); ?>">
                     <?php 
                         $initials = strtoupper(substr($currentUser['name'] ?? 'A', 0, 1));
@@ -47,13 +67,13 @@
                         <?php echo htmlspecialchars(ucfirst($currentUser['role'] ?? 'admin')); ?>
                     </span>
                 </div>
-            </div>
+            </a>
 
             <!-- Divider -->
             <div class="vr mx-1 text-muted d-none d-sm-block" style="height: 24px;"></div>
 
             <!-- Logout Link -->
-            <a href="<?php echo BASE_URL; ?>logout.php" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 px-2 px-sm-3 py-1" title="Log out from MoneyLend">
+            <a href="<?php echo BASE_URL; ?>logout.php" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 px-2 px-sm-3 py-1" title="Log out from MoneyLend" aria-label="Log out from MoneyLend">
                 <i class="fa-solid fa-right-from-bracket"></i>
                 <span class="d-none d-sm-inline">Logout</span>
             </a>

@@ -10,8 +10,16 @@
 
 // Prevent duplicate execution
 if (!defined('APP_NAME')) {
+    require_once __DIR__ . '/database.php';
+    require_once __DIR__ . '/../includes/settings_helper.php';
+
+    $appName = get_setting('app_name', 'MoneyLend');
+    $currencySymbol = get_setting('currency_symbol', '₹');
+    $currencyCode = ($currencySymbol === '₹') ? 'INR' : 'USD';
+    $dateFormat = get_setting('date_format', 'd/m/Y');
+
     // Application branding
-    define('APP_NAME', 'MoneyLend');
+    define('APP_NAME', !empty($appName) ? $appName : 'MoneyLend');
     define('APP_TAGLINE', 'Simple Lending. Smarter Tracking.');
     define('APP_VERSION', '1.0.0');
 
@@ -25,8 +33,9 @@ if (!defined('APP_NAME')) {
     date_default_timezone_set('Asia/Kolkata');
 
     // Currency Configuration
-    define('CURRENCY_SYMBOL', '₹');
-    define('CURRENCY_CODE', 'INR');
+    define('CURRENCY_SYMBOL', !empty($currencySymbol) ? $currencySymbol : '₹');
+    define('CURRENCY_CODE', $currencyCode);
+    define('APP_DATE_FORMAT', !empty($dateFormat) ? $dateFormat : 'd/m/Y');
 
     // Environment and Error Reporting
     // Set to 'development' during local development, change to 'production' for live deployment

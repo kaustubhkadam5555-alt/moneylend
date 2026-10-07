@@ -9,6 +9,8 @@
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/includes/auth.php';
 
+require_once __DIR__ . '/config/database.php';
+
 // If already logged in, redirect straight to dashboard
 if (is_logged_in()) {
     header("Location: " . BASE_URL . "dashboard.php");
@@ -17,34 +19,56 @@ if (is_logged_in()) {
 
 $errorMessage = '';
 $loggedOutMessage = '';
+$inputEmail = '';
 
 // Check if user was redirected from logout
 if (isset($_GET['logged_out']) && $_GET['logged_out'] == '1') {
     $loggedOutMessage = "You have been logged out successfully.";
 }
 
-// Process login attempt (Phase 1 mock authentication allowing instant testing)
+// Process login attempt with MySQL database and password_verify
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
+    $inputEmail = trim($_POST['email'] ?? '');
     $password = trim($_POST['password'] ?? '');
+    $csrfToken = $_POST['csrf_token'] ?? '';
 
-    if (empty($email) || empty($password)) {
+    // Verify CSRF token
+    if (!verify_csrf_token($csrfToken)) {
+        $errorMessage = "Security validation failed. Please refresh the page and try again.";
+    } elseif (empty($inputEmail) || empty($password)) {
         $errorMessage = "Please enter both your email address and password.";
+    } elseif (!filter_var($inputEmail, FILTER_VALIDATE_EMAIL)) {
+        $errorMessage = "Please enter a valid email address format.";
     } else {
-        // Phase 1: Allow demo admin login to preview UI shell
-        // Full database authentication with password_verify() will be connected in Phase 2
-        login_user([
-            'id'    => 1,
-            'name'  => 'Admin User',
-            'email' => $email,
-            'role'  => 'admin'
-        ]);
+        try {
+            $pdo = getDBConnection();
+            $stmt = $pdo->prepare("SELECT id, name, email, password, role FROM users WHERE email = :email LIMIT 1");
+            $stmt->execute([':email' => $inputEmail]);
+            $user = $stmt->fetch();
 
-        set_flash('success', 'Welcome back! You are logged into the MoneyLend dashboard.');
-        header("Location: " . BASE_URL . "dashboard.php");
-        exit;
+            if ($user && password_verify($password, $user['password'])) {
+                // Successful authentication
+                login_user([
+                    'id'    => (int)$user['id'],
+                    'name'  => $user['name'],
+                    'email' => $user['email'],
+                    'role'  => $user['role']
+                ]);
+
+                set_flash('success', 'Welcome back, ' . htmlspecialchars($user['name']) . '! You have logged in successfully.');
+                header("Location: " . BASE_URL . "dashboard.php");
+                exit;
+            } else {
+                // Generic error to prevent user enumeration
+                $errorMessage = "Invalid email or password. Please verify your credentials and try again.";
+            }
+        } catch (PDOException $e) {
+            error_log("Login database error: " . $e->getMessage());
+            $errorMessage = "A system error occurred while verifying credentials. Please try again later.";
+        }
     }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -106,7 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Login Form -->
         <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" class="text-start">
-            
+            <?php echo csrf_field(); ?>
+
             <!-- Email Field -->
             <div class="mb-3">
                 <label for="email" class="form-label small fw-semibold text-secondary">Email Address</label>
@@ -120,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         id="email" 
                         name="email" 
                         placeholder="name@example.com" 
-                        value="admin@moneylend.local" 
+                        value="<?php echo htmlspecialchars($inputEmail !== '' ? $inputEmail : 'admin@moneylend.local'); ?>" 
                         required 
                         autocomplete="email"
                     >
@@ -143,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         id="password" 
                         name="password" 
                         placeholder="Enter your password" 
-                        value="admin123" 
+                        value="" 
                         required 
                         autocomplete="current-password"
                     >

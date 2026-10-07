@@ -1,29 +1,71 @@
 /**
- * MoneyLend - Custom Application Stylesheet
+ * MoneyLend - Production Design System & Application Stylesheet
  * 
- * Clean, modern, financial-dashboard design built to augment Bootstrap 5.
- * Colors: Deep Slate Blue (#1e293b), Emerald Green (#059669), Soft Slate (#f8fafc)
+ * Clean, modern, high-trust financial dashboard design system built to augment Bootstrap 5.
+ * Core Palette: Slate Navy (#0f172a), Deep Teal (#0f766e), Royal Blue (#2563eb), Emerald (#059669), Soft Slate (#f8fafc)
  */
 
 :root {
-  --primary-color: #0f766e;        /* Deep Teal / Financial Emerald */
-  --primary-hover: #0d9488;
-  --primary-subtle: #f0fdf4;
-  --secondary-color: #1e293b;      /* Slate Navy */
-  --accent-color: #2563eb;         /* Royal Blue */
-  --body-bg: #f8fafc;              /* Soft Light Background */
+  /* Brand & Core Color Tokens */
+  --primary-color: #2563eb;        /* Royal Blue - Primary Actions */
+  --primary-hover: #1d4ed8;
+  --primary-subtle: #eff6ff;
+  --primary-border: #bfdbfe;
+  
+  --teal-color: #0f766e;           /* MoneyLend Brand Teal */
+  --teal-hover: #0d9488;
+  --teal-subtle: #f0fdfa;
+  --teal-border: #99f6e4;
+
+  --emerald-color: #059669;        /* Success / Repayment Green */
+  --emerald-hover: #047857;
+  --emerald-subtle: #ecfdf5;
+  --emerald-border: #a7f3d0;
+
+  --amber-color: #d97706;          /* Warning / Pending Amber */
+  --amber-hover: #b45309;
+  --amber-subtle: #fffbeb;
+  --amber-border: #fde68a;
+
+  --danger-color: #dc2626;         /* Overdue / Destructive Red */
+  --danger-hover: #b91c1c;
+  --danger-subtle: #fef2f2;
+  --danger-border: #fecaca;
+
+  /* Neutral Surface & Text Tokens */
+  --secondary-color: #0f172a;      /* Dark Slate Heading */
+  --text-main: #1e293b;            /* Primary Slate Body Text */
+  --text-muted: #64748b;           /* Muted Slate Text */
+  --text-subtle: #94a3b8;          /* Light Subtle Muted */
+  --body-bg: #f8fafc;              /* Soft Background */
   --card-bg: #ffffff;
-  --text-main: #1e293b;
-  --text-muted: #64748b;
-  --border-color: #e2e8f0;
+  --border-color: #e2e8f0;          /* Clean Border */
+  --border-light: #f1f5f9;
+
+  /* Geometry & Layout Tokens */
   --sidebar-width: 250px;
   --navbar-height: 64px;
+  --card-radius: 12px;
+  --control-radius: 8px;
+  --badge-radius: 20px;
   --sidebar-bg: #ffffff;
-  --sidebar-active-bg: #ecfdf5;
-  --sidebar-active-color: #0f766e;
+  --sidebar-active-bg: #eff6ff;
+  --sidebar-active-color: #2563eb;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.02);
+  --shadow-hover: 0 6px 16px -2px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.03);
+  --shadow-dropdown: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
 }
 
-/* Base & Typography */
+/* ==============================================================
+   1. Base & Global Typography
+   ============================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background-color: var(--body-bg);
@@ -32,37 +74,59 @@ body {
   margin: 0;
   display: flex;
   flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
+  color: var(--primary-color);
   text-decoration: none;
+  transition: color 0.15s ease-in-out;
 }
 
-/* MoneyLend Brand Badge */
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* Number display utility */
+.tabular-nums,
+.stat-value,
+.text-end {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==============================================================
+   2. MoneyLend Brand Component
+   ============================================================== */
 .brand-icon-box {
   width: 36px;
   height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f766e, #10b981);
+  background: linear-gradient(135deg, #0f766e 0%, #10b981 100%);
   color: #ffffff;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 1.1rem;
+  box-shadow: 0 2px 6px rgba(15, 118, 110, 0.2);
+  flex-shrink: 0;
 }
 
 .brand-text {
   font-weight: 700;
   font-size: 1.25rem;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: var(--secondary-color);
+  line-height: 1;
 }
 
 .brand-text span {
-  color: var(--primary-color);
+  color: var(--teal-color);
 }
 
-/* Layout Structure */
+/* ==============================================================
+   3. Layout Structure
+   ============================================================== */
 .app-wrapper {
   display: flex;
   min-height: 100vh;
@@ -78,19 +142,22 @@ a {
   position: sticky;
   top: 0;
   z-index: 1020;
+  box-shadow: var(--shadow-sm);
 }
 
 .navbar-user-avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #e2e8f0;
-  color: #475569;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #dbeafe;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
 }
 
 /* Left Sidebar */
@@ -101,8 +168,9 @@ a {
   min-height: calc(100vh - var(--navbar-height));
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), left 0.25s ease;
   z-index: 1010;
+  flex-shrink: 0;
 }
 
 .sidebar-nav {
@@ -110,12 +178,12 @@ a {
 }
 
 .sidebar-section-title {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #94a3b8;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
   font-weight: 700;
-  padding: 0.5rem 0.85rem 0.25rem;
+  padding: 0.6rem 0.85rem 0.35rem;
 }
 
 .sidebar-link {
@@ -124,9 +192,9 @@ a {
   padding: 0.65rem 0.85rem;
   color: #475569;
   font-weight: 500;
-  font-size: 0.92rem;
-  border-radius: 8px;
-  margin-bottom: 0.2rem;
+  font-size: 0.9rem;
+  border-radius: var(--control-radius);
+  margin-bottom: 0.25rem;
   transition: all 0.15s ease-in-out;
 }
 
@@ -135,6 +203,7 @@ a {
   margin-right: 0.75rem;
   font-size: 1rem;
   color: #64748b;
+  text-align: center;
   transition: color 0.15s ease-in-out;
 }
 
@@ -154,7 +223,7 @@ a {
 }
 
 .sidebar-link.active i {
-  color: var(--primary-color);
+  color: var(--sidebar-active-color);
 }
 
 /* Main Content Area */
@@ -167,75 +236,259 @@ a {
 }
 
 .content-container {
-  padding: 1.75rem;
+  padding: 1.75rem 2rem;
   flex: 1;
+  width: 100%;
+  max-width: 1600px;
 }
 
-/* Page Header */
+/* ==============================================================
+   4. Page Header & Breadcrumbs
+   ============================================================== */
 .page-title {
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   font-weight: 700;
   color: var(--secondary-color);
-  letter-spacing: -0.02em;
-  margin-bottom: 0.15rem;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  margin-bottom: 0.2rem;
 }
 
 .page-subtitle {
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   margin-bottom: 0;
+  line-height: 1.4;
 }
 
-/* Dashboard Statistic Cards */
-.stat-card {
+.breadcrumb {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.breadcrumb a {
+  color: var(--text-muted);
+}
+
+.breadcrumb a:hover {
+  color: var(--primary-color);
+}
+
+.breadcrumb-item.active {
+  color: var(--secondary-color);
+  font-weight: 600;
+}
+
+/* ==============================================================
+   5. Buttons System
+   ============================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  font-weight: 500;
+  border-radius: var(--control-radius);
+  transition: all 0.15s ease-in-out;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #ffffff;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: #ffffff;
+}
+
+.btn-outline-primary {
+  color: var(--primary-color);
+  border-color: #cbd5e1;
   background-color: #ffffff;
-  border-radius: 12px;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+  background-color: var(--primary-subtle);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-success {
+  background-color: var(--emerald-color);
+  border-color: var(--emerald-color);
+  color: #ffffff;
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+  background-color: var(--emerald-hover);
+  border-color: var(--emerald-hover);
+  color: #ffffff;
+}
+
+.btn-outline-success {
+  color: var(--emerald-color);
+  border-color: var(--emerald-border);
+  background-color: #ffffff;
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus,
+.btn-outline-success:active {
+  background-color: var(--emerald-subtle);
+  border-color: var(--emerald-color);
+  color: var(--emerald-color);
+}
+
+.quick-action-btn {
+  height: 38px;
+  padding: 0.45rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--control-radius);
+}
+
+.btn-sm {
+  height: 32px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8125rem;
+  border-radius: 6px;
+}
+
+.btn-lg {
+  height: 46px;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.95rem;
+  border-radius: 10px;
+}
+
+/* ==============================================================
+   6. Form Elements
+   ============================================================== */
+.form-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.form-control,
+.form-select {
+  min-height: 38px;
+  border-radius: var(--control-radius);
   border: 1px solid var(--border-color);
-  padding: 1.35rem 1.25rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.875rem;
+  color: var(--text-main);
+  background-color: #ffffff;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  outline: none;
+}
+
+.form-control-lg,
+.form-select-lg {
+  min-height: 46px;
+  font-size: 1rem;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+}
+
+.input-group-text {
+  background-color: #f8fafc;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  border-radius: var(--control-radius);
+}
+
+.form-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+/* ==============================================================
+   7. Statistic Cards
+   ============================================================== */
+.stat-card {
+  background-color: var(--card-bg);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--border-color);
+  padding: 1.25rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow-card);
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-hover);
 }
 
 .stat-icon-wrapper {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
+  flex-shrink: 0;
 }
 
 .stat-icon-emerald {
-  background-color: #d1fae5;
-  color: #059669;
+  background-color: var(--emerald-subtle);
+  color: var(--emerald-color);
 }
 
 .stat-icon-blue {
-  background-color: #dbeafe;
-  color: #2563eb;
+  background-color: var(--primary-subtle);
+  color: var(--primary-color);
 }
 
 .stat-icon-teal {
-  background-color: #ccfbf1;
-  color: #0f766e;
+  background-color: var(--teal-subtle);
+  color: var(--teal-color);
 }
 
 .stat-icon-amber {
-  background-color: #fef3c7;
-  color: #d97706;
+  background-color: var(--amber-subtle);
+  color: var(--amber-color);
 }
 
 .stat-label {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   color: var(--text-muted);
   margin-bottom: 0.35rem;
 }
@@ -249,29 +502,19 @@ a {
 
 .stat-footer-text {
   font-size: 0.8rem;
-  color: #94a3b8;
-  margin-top: 0.35rem;
+  color: var(--text-muted);
+  margin-top: 0.4rem;
 }
 
-/* Quick Action Buttons */
-.quick-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.55rem 1.15rem;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 0.9rem;
-  transition: all 0.15s ease-in-out;
-}
-
-/* Section Cards & Tables */
+/* ==============================================================
+   8. Section Cards & Panels
+   ============================================================== */
 .content-card {
-  background-color: #ffffff;
-  border-radius: 12px;
+  background-color: var(--card-bg);
+  border-radius: var(--card-radius);
   border: 1px solid var(--border-color);
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: var(--shadow-card);
 }
 
 .content-card-header {
@@ -281,6 +524,8 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .content-card-title {
@@ -288,57 +533,207 @@ a {
   font-weight: 600;
   color: var(--secondary-color);
   margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-/* Empty State Styling */
+/* ==============================================================
+   9. Table Standardization
+   ============================================================== */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 0 0 var(--card-radius) var(--card-radius);
+}
+
+.table {
+  margin-bottom: 0;
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.table thead th {
+  background-color: #f8fafc;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.table tbody td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.875rem;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* ==============================================================
+   10. Badges & Status Indicators
+   ============================================================== */
+.badge {
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.35em 0.75em;
+  border-radius: var(--badge-radius);
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
+.bg-primary-subtle {
+  background-color: var(--primary-subtle) !important;
+  color: var(--primary-color) !important;
+  border: 1px solid var(--primary-border) !important;
+}
+
+.bg-success-subtle {
+  background-color: var(--emerald-subtle) !important;
+  color: var(--emerald-color) !important;
+  border: 1px solid var(--emerald-border) !important;
+}
+
+.bg-danger-subtle {
+  background-color: var(--danger-subtle) !important;
+  color: var(--danger-color) !important;
+  border: 1px solid var(--danger-border) !important;
+}
+
+.bg-warning-subtle {
+  background-color: var(--amber-subtle) !important;
+  color: var(--amber-color) !important;
+  border: 1px solid var(--amber-border) !important;
+}
+
+.bg-secondary-subtle {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* ==============================================================
+   11. Alerts & Notifications
+   ============================================================== */
+.alert {
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  border-left-width: 4px;
+  padding: 0.85rem 1.15rem;
+  font-size: 0.875rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.alert-success {
+  border-left-color: var(--emerald-color);
+  background-color: var(--emerald-subtle);
+  color: #065f46;
+}
+
+.alert-danger {
+  border-left-color: var(--danger-color);
+  background-color: var(--danger-subtle);
+  color: #991b1b;
+}
+
+.alert-info {
+  border-left-color: var(--primary-color);
+  background-color: var(--primary-subtle);
+  color: #1e40af;
+}
+
+.alert-warning {
+  border-left-color: var(--amber-color);
+  background-color: var(--amber-subtle);
+  color: #92400e;
+}
+
+/* ==============================================================
+   12. Empty States
+   ============================================================== */
 .empty-state {
   padding: 3rem 1.5rem;
   text-align: center;
 }
 
 .empty-state-icon {
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background-color: #f1f5f9;
-  color: #94a3b8;
+  color: var(--text-subtle);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
-  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  margin-bottom: 0.85rem;
 }
 
 .empty-state-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #475569;
+  color: #334155;
   margin-bottom: 0.35rem;
 }
 
 .empty-state-text {
   font-size: 0.875rem;
-  color: #94a3b8;
-  max-width: 320px;
+  color: var(--text-muted);
+  max-width: 360px;
   margin: 0 auto;
 }
 
-/* App Footer */
-.app-footer {
-  padding: 1rem 1.75rem;
-  border-top: 1px solid var(--border-color);
-  background-color: #ffffff;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+/* ==============================================================
+   13. Settings Tabs
+   ============================================================== */
+.custom-settings-tabs .nav-link {
+  color: #475569;
+  font-weight: 500;
+  border-radius: var(--control-radius);
+  padding: 0.6rem 1.15rem;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
 }
 
-/* Login Page Specific Styling */
+.custom-settings-tabs .nav-link:hover {
+  background: #f8fafc;
+  color: var(--primary-color);
+  border-color: #cbd5e1;
+}
+
+.custom-settings-tabs .nav-link.active {
+  background: var(--primary-color);
+  color: #ffffff;
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+/* ==============================================================
+   14. Login & Authentication Page
+   ============================================================== */
 .auth-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: radial-gradient(circle at top right, #f1f5f9 0%, #e2e8f0 100%);
   padding: 1.5rem;
 }
 
@@ -348,14 +743,14 @@ a {
   background-color: #ffffff;
   border-radius: 16px;
   border: 1px solid var(--border-color);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  box-shadow: var(--shadow-dropdown);
   padding: 2.25rem 2rem;
 }
 
 .auth-brand-logo {
   width: 46px;
   height: 46px;
-  background: linear-gradient(135deg, #0f766e, #10b981);
+  background: linear-gradient(135deg, #0f766e 0%, #10b981 100%);
   color: #ffffff;
   border-radius: 12px;
   display: inline-flex;
@@ -366,7 +761,20 @@ a {
   margin-bottom: 0.75rem;
 }
 
-/* Sidebar Backdrop on Mobile */
+/* ==============================================================
+   15. App Footer
+   ============================================================== */
+.app-footer {
+  padding: 1rem 1.75rem;
+  border-top: 1px solid var(--border-color);
+  background-color: #ffffff;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* ==============================================================
+   16. Backdrop for Mobile Sidebar
+   ============================================================== */
 .sidebar-backdrop {
   display: none;
   position: fixed;
@@ -374,12 +782,14 @@ a {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(15, 23, 42, 0.45);
   backdrop-filter: blur(2px);
   z-index: 1005;
 }
 
-/* Mobile & Tablet Responsiveness */
+/* ==============================================================
+   17. Responsive Media Queries
+   ============================================================== */
 @media (max-width: 991.98px) {
   .app-sidebar {
     position: fixed;
@@ -387,7 +797,7 @@ a {
     left: calc(-1 * var(--sidebar-width));
     height: 100vh;
     z-index: 1015;
-    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.1);
+    box-shadow: 4px 0 20px rgba(15, 23, 42, 0.15);
   }
 
   .app-sidebar.show-sidebar {
@@ -400,5 +810,88 @@ a {
 
   .content-container {
     padding: 1.25rem;
+  }
+
+  /* Prevent sticky card from blocking screen on mobile/tablet */
+  .content-card.sticky-top {
+    position: static !important;
+    top: auto !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .content-container {
+    padding: 1rem;
+  }
+
+  .page-title {
+    font-size: 1.3rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.8125rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-value {
+    font-size: 1.45rem;
+  }
+
+  .quick-action-btn {
+    width: 100%;
+  }
+
+  .content-card-header {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .content-container {
+    padding: 0.875rem;
+  }
+
+  .auth-card {
+    padding: 1.5rem 1.25rem;
+  }
+}
+
+/* ==============================================================
+   18. Print Media Optimizations
+   ============================================================== */
+@media print {
+  .app-navbar,
+  .app-sidebar,
+  .app-footer,
+  .btn,
+  .d-print-none,
+  .sidebar-backdrop {
+    display: none !important;
+  }
+
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .app-wrapper,
+  .app-main,
+  .content-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .content-card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .table {
+    width: 100% !important;
   }
 }

@@ -26,3 +26,8 @@ Thumbs.db
 # Environment / local config overrides (if used in future)
 *.local.php
 .env
+
+# Test runtime cookies and artifacts
+scratch/*_cookie.txt
+scratch/*.cookie
+scratch/*.tmp

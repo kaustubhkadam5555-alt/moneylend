@@ -11,8 +11,8 @@
             <div class="mb-2 mb-md-0">
                 &copy; <?php echo date('Y'); ?> <strong class="text-dark">MoneyLend</strong>. Simple Lending. Smarter Tracking.
             </div>
-            <div class="small">
-                <span>Phase 1 — Foundation &amp; UI Shell</span>
+            <div class="small text-muted">
+                <span>MoneyLend &bull; Financial Management System</span>
             </div>
         </footer>
     </main>

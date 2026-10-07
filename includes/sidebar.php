@@ -6,7 +6,23 @@
  * Dashboard, Borrowers, Loans, Repayments, Reports, Settings.
  */
 
-$activePage = $activePage ?? 'dashboard';
+// Automated reliable active page detection based on URL script path
+$currentScript = $_SERVER['SCRIPT_NAME'] ?? ($_SERVER['PHP_SELF'] ?? '');
+if (str_contains($currentScript, '/borrowers/')) {
+    $activePage = 'borrowers';
+} elseif (str_contains($currentScript, '/loans/')) {
+    $activePage = 'loans';
+} elseif (str_contains($currentScript, '/repayments/')) {
+    $activePage = 'repayments';
+} elseif (str_contains($currentScript, '/reports/')) {
+    $activePage = 'reports';
+} elseif (str_contains($currentScript, '/settings/')) {
+    $activePage = 'settings';
+} elseif (str_contains($currentScript, 'dashboard.php')) {
+    $activePage = 'dashboard';
+} else {
+    $activePage = $activePage ?? 'dashboard';
+}
 ?>
 <!-- Mobile Overlay Backdrop -->
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
@@ -55,7 +71,7 @@ $activePage = $activePage ?? 'dashboard';
             <span>Reports</span>
         </a>
 
-        <a href="#settings" class="sidebar-link <?php echo ($activePage === 'settings') ? 'active' : ''; ?>" data-bs-toggle="tooltip" data-bs-placement="right" title="System Settings">
+        <a href="<?php echo BASE_URL; ?>settings/" class="sidebar-link <?php echo ($activePage === 'settings') ? 'active' : ''; ?>">
             <i class="fa-solid fa-gear"></i>
             <span>Settings</span>
         </a>
