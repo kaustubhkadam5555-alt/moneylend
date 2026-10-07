@@ -3,32 +3,39 @@
  * 
  * Clean, modern, high-trust financial dashboard design system built to augment Bootstrap 5.
  * Core Palette: Slate Navy (#0f172a), Deep Teal (#0f766e), Royal Blue (#2563eb), Emerald (#059669), Soft Slate (#f8fafc)
+ * Phase 9 Professional UI/UX Refinement: Tabular typography, standardized components,
+ * subtle micro-interactions, responsive tables, and accessibility standards.
  */
 
 :root {
   /* Brand & Core Color Tokens */
   --primary-color: #2563eb;        /* Royal Blue - Primary Actions */
-  --primary-hover: #1d4ed8;
+  --primary-dark: #1d4ed8;
+  --primary-hover: #1e40af;
   --primary-subtle: #eff6ff;
   --primary-border: #bfdbfe;
   
   --teal-color: #0f766e;           /* MoneyLend Brand Teal */
+  --teal-dark: #115e59;
   --teal-hover: #0d9488;
   --teal-subtle: #f0fdfa;
   --teal-border: #99f6e4;
 
   --emerald-color: #059669;        /* Success / Repayment Green */
-  --emerald-hover: #047857;
+  --emerald-dark: #047857;
+  --emerald-hover: #10b981;
   --emerald-subtle: #ecfdf5;
   --emerald-border: #a7f3d0;
 
   --amber-color: #d97706;          /* Warning / Pending Amber */
-  --amber-hover: #b45309;
+  --amber-dark: #b45309;
+  --amber-hover: #f59e0b;
   --amber-subtle: #fffbeb;
   --amber-border: #fde68a;
 
   --danger-color: #dc2626;         /* Overdue / Destructive Red */
-  --danger-hover: #b91c1c;
+  --danger-dark: #b91c1c;
+  --danger-hover: #ef4444;
   --danger-subtle: #fef2f2;
   --danger-border: #fecaca;
 
@@ -39,24 +46,26 @@
   --text-subtle: #94a3b8;          /* Light Subtle Muted */
   --body-bg: #f8fafc;              /* Soft Background */
   --card-bg: #ffffff;
-  --border-color: #e2e8f0;          /* Clean Border */
+  --border-color: #e2e8f0;         /* Clean Crisp Border */
   --border-light: #f1f5f9;
+  --focus-ring: rgba(37, 99, 235, 0.18);
 
   /* Geometry & Layout Tokens */
-  --sidebar-width: 250px;
+  --sidebar-width: 260px;
   --navbar-height: 64px;
   --card-radius: 12px;
   --control-radius: 8px;
-  --badge-radius: 20px;
+  --badge-radius: 9999px;
   --sidebar-bg: #ffffff;
   --sidebar-active-bg: #eff6ff;
   --sidebar-active-color: #2563eb;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  /* Elevation & Shadows */
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
   --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.02);
-  --shadow-hover: 0 6px 16px -2px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.03);
-  --shadow-dropdown: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  --shadow-hover: 0 8px 18px -3px rgba(15, 23, 42, 0.08), 0 3px 6px -2px rgba(15, 23, 42, 0.04);
+  --shadow-dropdown: 0 16px 32px -4px rgba(15, 23, 42, 0.1), 0 6px 12px -4px rgba(15, 23, 42, 0.04);
 }
 
 /* ==============================================================
@@ -66,8 +75,13 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   background-color: var(--body-bg);
   color: var(--text-main);
   min-height: 100vh;
@@ -76,6 +90,7 @@ body {
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
 }
 
 a {
@@ -88,33 +103,55 @@ a:hover {
   color: var(--primary-hover);
 }
 
-/* Number display utility */
+/* Tabular numbers for financial precision */
 .tabular-nums,
 .stat-value,
-.text-end {
+.text-end,
+.financial-amount {
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Accessible focus visible outlines */
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
 }
 
 /* ==============================================================
    2. MoneyLend Brand Component
    ============================================================== */
 .brand-icon-box {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #0f766e 0%, #10b981 100%);
   color: #ffffff;
   border-radius: 10px;
-  font-size: 1.1rem;
-  box-shadow: 0 2px 6px rgba(15, 118, 110, 0.2);
+  font-size: 1.15rem;
+  box-shadow: 0 2px 8px rgba(15, 118, 110, 0.22);
   flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.brand-icon-box:hover {
+  transform: scale(1.04);
 }
 
 .brand-text {
   font-weight: 700;
-  font-size: 1.25rem;
+  font-size: 1.28rem;
   letter-spacing: -0.025em;
   color: var(--secondary-color);
   line-height: 1;
@@ -142,12 +179,12 @@ a:hover {
   position: sticky;
   top: 0;
   z-index: 1020;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
 }
 
 .navbar-user-avatar {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: #eff6ff;
   color: #2563eb;
@@ -158,6 +195,12 @@ a:hover {
   font-weight: 700;
   font-size: 0.875rem;
   flex-shrink: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.navbar-user-avatar:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
 }
 
 /* Left Sidebar */
@@ -178,24 +221,25 @@ a:hover {
 }
 
 .sidebar-section-title {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   color: var(--text-subtle);
   font-weight: 700;
-  padding: 0.6rem 0.85rem 0.35rem;
+  padding: 0.65rem 0.85rem 0.35rem;
 }
 
 .sidebar-link {
   display: flex;
   align-items: center;
-  padding: 0.65rem 0.85rem;
+  padding: 0.7rem 0.9rem;
   color: #475569;
   font-weight: 500;
   font-size: 0.9rem;
   border-radius: var(--control-radius);
   margin-bottom: 0.25rem;
-  transition: all 0.15s ease-in-out;
+  transition: all 0.18s ease-in-out;
+  position: relative;
 }
 
 .sidebar-link i {
@@ -204,7 +248,7 @@ a:hover {
   font-size: 1rem;
   color: #64748b;
   text-align: center;
-  transition: color 0.15s ease-in-out;
+  transition: color 0.18s ease-in-out, transform 0.18s ease-in-out;
 }
 
 .sidebar-link:hover {
@@ -214,12 +258,14 @@ a:hover {
 
 .sidebar-link:hover i {
   color: var(--primary-color);
+  transform: scale(1.08);
 }
 
 .sidebar-link.active {
   background-color: var(--sidebar-active-bg);
   color: var(--sidebar-active-color);
   font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--sidebar-active-color);
 }
 
 .sidebar-link.active i {
@@ -246,19 +292,19 @@ a:hover {
    4. Page Header & Breadcrumbs
    ============================================================== */
 .page-title {
-  font-size: 1.45rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--secondary-color);
   letter-spacing: -0.025em;
   line-height: 1.25;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.25rem;
 }
 
 .page-subtitle {
   color: var(--text-muted);
   font-size: 0.875rem;
   margin-bottom: 0;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .breadcrumb {
@@ -269,6 +315,7 @@ a:hover {
 
 .breadcrumb a {
   color: var(--text-muted);
+  transition: color 0.15s ease;
 }
 
 .breadcrumb a:hover {
@@ -290,28 +337,39 @@ a:hover {
   gap: 0.45rem;
   font-weight: 500;
   border-radius: var(--control-radius);
-  transition: all 0.15s ease-in-out;
+  transition: all 0.18s ease-in-out;
   white-space: nowrap;
   line-height: 1.4;
+  border: 1px solid transparent;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
 }
 
 .btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .btn-primary {
   background-color: var(--primary-color);
   border-color: var(--primary-color);
   color: #ffffff;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.15);
 }
 
 .btn-primary:hover,
 .btn-primary:focus,
 .btn-primary:active {
-  background-color: var(--primary-hover);
-  border-color: var(--primary-hover);
+  background-color: var(--primary-dark);
+  border-color: var(--primary-dark);
   color: #ffffff;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
 }
 
 .btn-outline-primary {
@@ -326,20 +384,23 @@ a:hover {
   background-color: var(--primary-subtle);
   border-color: var(--primary-color);
   color: var(--primary-color);
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.1);
 }
 
 .btn-success {
   background-color: var(--emerald-color);
   border-color: var(--emerald-color);
   color: #ffffff;
+  box-shadow: 0 1px 2px rgba(5, 150, 105, 0.15);
 }
 
 .btn-success:hover,
 .btn-success:focus,
 .btn-success:active {
-  background-color: var(--emerald-hover);
-  border-color: var(--emerald-hover);
+  background-color: var(--emerald-dark);
+  border-color: var(--emerald-dark);
   color: #ffffff;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
 }
 
 .btn-outline-success {
@@ -354,6 +415,36 @@ a:hover {
   background-color: var(--emerald-subtle);
   border-color: var(--emerald-color);
   color: var(--emerald-color);
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.1);
+}
+
+.btn-outline-danger {
+  color: var(--danger-color);
+  border-color: #fca5a5;
+  background-color: #ffffff;
+}
+
+.btn-outline-danger:hover,
+.btn-outline-danger:focus,
+.btn-outline-danger:active {
+  background-color: var(--danger-subtle);
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.1);
+}
+
+.btn-outline-secondary {
+  color: #475569;
+  border-color: #cbd5e1;
+  background-color: #ffffff;
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-secondary:active {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+  color: var(--secondary-color);
 }
 
 .quick-action-btn {
@@ -396,7 +487,7 @@ a:hover {
   min-height: 38px;
   border-radius: var(--control-radius);
   border: 1px solid var(--border-color);
-  padding: 0.45rem 0.85rem;
+  padding: 0.48rem 0.85rem;
   font-size: 0.875rem;
   color: var(--text-main);
   background-color: #ffffff;
@@ -405,8 +496,8 @@ a:hover {
 
 .form-control:focus,
 .form-select:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--focus-ring);
   outline: none;
 }
 
@@ -424,23 +515,33 @@ a:hover {
   color: var(--text-muted);
   font-size: 0.875rem;
   border-radius: var(--control-radius);
+  font-weight: 500;
 }
 
 .form-text {
   font-size: 0.75rem;
   color: var(--text-muted);
-  margin-top: 0.25rem;
+  margin-top: 0.3rem;
+}
+
+.form-check-input:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 /* ==============================================================
-   7. Statistic Cards
+   7. Statistic Cards (KPIs)
    ============================================================== */
 .stat-card {
   background-color: var(--card-bg);
   border-radius: var(--card-radius);
   border: 1px solid var(--border-color);
   padding: 1.25rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -456,12 +557,17 @@ a:hover {
 .stat-icon-wrapper {
   width: 44px;
   height: 44px;
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
   flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover .stat-icon-wrapper {
+  transform: scale(1.05);
 }
 
 .stat-icon-emerald {
@@ -484,11 +590,17 @@ a:hover {
   color: var(--amber-color);
 }
 
+.stat-icon-danger,
+.stat-icon-red {
+  background-color: var(--danger-subtle);
+  color: var(--danger-color);
+}
+
 .stat-label {
   font-size: 0.78rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
   margin-bottom: 0.35rem;
 }
@@ -498,12 +610,13 @@ a:hover {
   font-weight: 700;
   color: var(--secondary-color);
   line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .stat-footer-text {
   font-size: 0.8rem;
   color: var(--text-muted);
-  margin-top: 0.4rem;
+  margin-top: 0.45rem;
 }
 
 /* ==============================================================
@@ -547,6 +660,23 @@ a:hover {
   border-radius: 0 0 var(--card-radius) var(--card-radius);
 }
 
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 .table {
   margin-bottom: 0;
   color: var(--text-main);
@@ -555,12 +685,12 @@ a:hover {
 
 .table thead th {
   background-color: #f8fafc;
-  color: #64748b;
-  font-size: 0.72rem;
+  color: #475569;
+  font-size: 0.74rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 0.75rem 1rem;
+  padding: 0.8rem 1rem;
   border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
 }
@@ -575,6 +705,10 @@ a:hover {
   border-bottom: 0;
 }
 
+.table-hover tbody tr {
+  transition: background-color 0.12s ease-in-out;
+}
+
 .table-hover tbody tr:hover {
   background-color: #f8fafc;
 }
@@ -585,7 +719,7 @@ a:hover {
 .badge {
   font-weight: 600;
   font-size: 0.75rem;
-  padding: 0.35em 0.75em;
+  padding: 0.35em 0.8em;
   border-radius: var(--badge-radius);
   letter-spacing: 0.02em;
   display: inline-flex;
@@ -634,6 +768,7 @@ a:hover {
   padding: 0.85rem 1.15rem;
   font-size: 0.875rem;
   box-shadow: var(--shadow-sm);
+  transition: opacity 0.2s ease;
 }
 
 .alert-success {
@@ -669,20 +804,20 @@ a:hover {
 }
 
 .empty-state-icon {
-  width: 56px;
-  height: 56px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   background-color: #f1f5f9;
   color: var(--text-subtle);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.55rem;
   margin-bottom: 0.85rem;
 }
 
 .empty-state-title {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: #334155;
   margin-bottom: 0.35rem;
@@ -691,7 +826,7 @@ a:hover {
 .empty-state-text {
   font-size: 0.875rem;
   color: var(--text-muted);
-  max-width: 360px;
+  max-width: 380px;
   margin: 0 auto;
 }
 
@@ -702,13 +837,13 @@ a:hover {
   color: #475569;
   font-weight: 500;
   border-radius: var(--control-radius);
-  padding: 0.6rem 1.15rem;
+  padding: 0.65rem 1.15rem;
   background: #ffffff;
   border: 1px solid var(--border-color);
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   font-size: 0.875rem;
 }
 
@@ -722,7 +857,7 @@ a:hover {
   background: var(--primary-color);
   color: #ffffff;
   border-color: var(--primary-color);
-  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.25);
 }
 
 /* ==============================================================
@@ -748,16 +883,16 @@ a:hover {
 }
 
 .auth-brand-logo {
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   background: linear-gradient(135deg, #0f766e 0%, #10b981 100%);
   color: #ffffff;
   border-radius: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
-  box-shadow: 0 4px 10px rgba(15, 118, 110, 0.25);
+  font-size: 1.45rem;
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25);
   margin-bottom: 0.75rem;
 }
 
@@ -783,12 +918,33 @@ a:hover {
   width: 100%;
   height: 100%;
   background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(3px);
   z-index: 1005;
+  transition: opacity 0.25s ease;
 }
 
 /* ==============================================================
-   17. Responsive Media Queries
+   17. Receipt Voucher Styling
+   ============================================================== */
+.receipt-voucher-card,
+.receipt-card {
+  max-width: 760px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.receipt-header-banner {
+  border-bottom: 2px dashed #e2e8f0;
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+/* ==============================================================
+   18. Responsive Media Queries
    ============================================================== */
 @media (max-width: 991.98px) {
   .app-sidebar {
@@ -797,7 +953,7 @@ a:hover {
     left: calc(-1 * var(--sidebar-width));
     height: 100vh;
     z-index: 1015;
-    box-shadow: 4px 0 20px rgba(15, 23, 42, 0.15);
+    box-shadow: 4px 0 24px rgba(15, 23, 42, 0.18);
   }
 
   .app-sidebar.show-sidebar {
@@ -825,7 +981,7 @@ a:hover {
   }
 
   .page-title {
-    font-size: 1.3rem;
+    font-size: 1.35rem;
   }
 
   .page-subtitle {
@@ -847,6 +1003,10 @@ a:hover {
   .content-card-header {
     padding: 1rem;
   }
+
+  .receipt-voucher-card {
+    padding: 1.5rem 1.25rem;
+  }
 }
 
 @media (max-width: 575.98px) {
@@ -857,10 +1017,26 @@ a:hover {
   .auth-card {
     padding: 1.5rem 1.25rem;
   }
+
+  .stat-value {
+    font-size: 1.35rem;
+  }
 }
 
 /* ==============================================================
-   18. Print Media Optimizations
+   19. Micro-interactions & Reduced Motion
+   ============================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==============================================================
+   20. Print Media Optimizations
    ============================================================== */
 @media print {
   .app-navbar,
@@ -868,13 +1044,16 @@ a:hover {
   .app-footer,
   .btn,
   .d-print-none,
-  .sidebar-backdrop {
+  .sidebar-backdrop,
+  .modal,
+  .breadcrumb {
     display: none !important;
   }
 
   body {
     background-color: #ffffff !important;
     color: #000000 !important;
+    font-size: 12pt;
   }
 
   .app-wrapper,
@@ -886,12 +1065,24 @@ a:hover {
     max-width: 100% !important;
   }
 
-  .content-card {
+  .content-card,
+  .receipt-voucher-card {
     border: none !important;
     box-shadow: none !important;
+    padding: 0 !important;
   }
 
   .table {
     width: 100% !important;
+  }
+
+  .table thead th {
+    background-color: #f8fafc !important;
+    color: #000000 !important;
+    border-bottom: 2px solid #000000 !important;
+  }
+
+  .table tbody td {
+    border-bottom: 1px solid #cccccc !important;
   }
 }

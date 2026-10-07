@@ -1,13 +1,13 @@
 /**
  * MoneyLend - Application Script
  * 
- * Vanilla JavaScript handling mobile sidebar toggling, responsive interactions,
- * accessible alert dismissals, and Bootstrap component initialization.
+ * Vanilla JavaScript handling mobile sidebar toggling, keyboard accessibility,
+ * responsive interactions, accessible alert dismissals, and Bootstrap component initialization.
  */
 
 document.addEventListener('DOMContentLoaded', function () {
     // -------------------------------------------------------------
-    // 1. Mobile Sidebar Toggle Functionality
+    // 1. Mobile Sidebar Toggle & Keyboard Accessibility
     // -------------------------------------------------------------
     const sidebar = document.getElementById('appSidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
@@ -19,6 +19,9 @@ document.addEventListener('DOMContentLoaded', function () {
             sidebar.classList.add('show-sidebar');
             sidebarBackdrop.classList.add('show-backdrop');
             document.body.style.overflow = 'hidden'; // Prevent background scrolling on mobile
+            if (sidebarClose) {
+                sidebarClose.focus();
+            }
         }
     }
 
@@ -27,6 +30,9 @@ document.addEventListener('DOMContentLoaded', function () {
             sidebar.classList.remove('show-sidebar');
             sidebarBackdrop.classList.remove('show-backdrop');
             document.body.style.overflow = '';
+            if (sidebarToggle && document.activeElement === sidebarClose) {
+                sidebarToggle.focus();
+            }
         }
     }
 
@@ -53,6 +59,15 @@ document.addEventListener('DOMContentLoaded', function () {
             closeSidebar();
         });
     }
+
+    // Keyboard Accessibility: Close mobile sidebar with ESC key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' || e.key === 'Esc') {
+            if (sidebar && sidebar.classList.contains('show-sidebar')) {
+                closeSidebar();
+            }
+        }
+    });
 
     // Auto-close mobile sidebar when clicking any navigation link
     if (sidebar) {
@@ -105,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // -------------------------------------------------------------
     const postForms = document.querySelectorAll('form[method="POST"], form[method="post"]');
     postForms.forEach(function (form) {
-        form.addEventListener('submit', function (e) {
+        form.addEventListener('submit', function () {
             // Respect HTML5 client-side validation
             if (!form.checkValidity()) {
                 return;

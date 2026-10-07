@@ -44,34 +44,34 @@ if (str_contains($currentScript, '/borrowers/')) {
     <div class="sidebar-nav flex-grow-1">
         <div class="sidebar-section-title">Navigation</div>
         
-        <a href="<?php echo BASE_URL; ?>dashboard.php" class="sidebar-link <?php echo ($activePage === 'dashboard') ? 'active' : ''; ?>">
+        <a href="<?php echo BASE_URL; ?>dashboard.php" class="sidebar-link <?php echo ($activePage === 'dashboard') ? 'active' : ''; ?>" <?php echo ($activePage === 'dashboard') ? 'aria-current="page"' : ''; ?>>
             <i class="fa-solid fa-gauge-high"></i>
             <span>Dashboard</span>
         </a>
 
-        <a href="<?php echo BASE_URL; ?>borrowers/" class="sidebar-link <?php echo ($activePage === 'borrowers') ? 'active' : ''; ?>">
+        <a href="<?php echo BASE_URL; ?>borrowers/" class="sidebar-link <?php echo ($activePage === 'borrowers') ? 'active' : ''; ?>" <?php echo ($activePage === 'borrowers') ? 'aria-current="page"' : ''; ?>>
             <i class="fa-solid fa-users"></i>
             <span>Borrowers</span>
         </a>
 
-        <a href="<?php echo BASE_URL; ?>loans/" class="sidebar-link <?php echo ($activePage === 'loans') ? 'active' : ''; ?>">
+        <a href="<?php echo BASE_URL; ?>loans/" class="sidebar-link <?php echo ($activePage === 'loans') ? 'active' : ''; ?>" <?php echo ($activePage === 'loans') ? 'aria-current="page"' : ''; ?>>
             <i class="fa-solid fa-file-invoice-dollar"></i>
             <span>Loans</span>
         </a>
 
-        <a href="<?php echo BASE_URL; ?>repayments/" class="sidebar-link <?php echo ($activePage === 'repayments') ? 'active' : ''; ?>">
+        <a href="<?php echo BASE_URL; ?>repayments/" class="sidebar-link <?php echo ($activePage === 'repayments') ? 'active' : ''; ?>" <?php echo ($activePage === 'repayments') ? 'aria-current="page"' : ''; ?>>
             <i class="fa-solid fa-money-bill-wave"></i>
             <span>Repayments</span>
         </a>
 
         <div class="sidebar-section-title mt-3">Insights & System</div>
 
-        <a href="<?php echo BASE_URL; ?>reports/" class="sidebar-link <?php echo ($activePage === 'reports') ? 'active' : ''; ?>">
+        <a href="<?php echo BASE_URL; ?>reports/" class="sidebar-link <?php echo ($activePage === 'reports') ? 'active' : ''; ?>" <?php echo ($activePage === 'reports') ? 'aria-current="page"' : ''; ?>>
             <i class="fa-solid fa-chart-line"></i>
             <span>Reports</span>
         </a>
 
-        <a href="<?php echo BASE_URL; ?>settings/" class="sidebar-link <?php echo ($activePage === 'settings') ? 'active' : ''; ?>">
+        <a href="<?php echo BASE_URL; ?>settings/" class="sidebar-link <?php echo ($activePage === 'settings') ? 'active' : ''; ?>" <?php echo ($activePage === 'settings') ? 'aria-current="page"' : ''; ?>>
             <i class="fa-solid fa-gear"></i>
             <span>Settings</span>
         </a>

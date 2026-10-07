@@ -127,6 +127,10 @@ require_once __DIR__ . '/includes/navbar.php';
                         <i class="fa-solid fa-money-bill-transfer"></i>
                         <span>Record Repayment</span>
                     </a>
+                    <a href="<?php echo BASE_URL; ?>reports/" class="btn btn-outline-secondary quick-action-btn">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>View Reports</span>
+                    </a>
                 </div>
             </div>
 
@@ -137,11 +141,11 @@ require_once __DIR__ . '/includes/navbar.php';
                     <div class="stat-card">
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="stat-label">Total Borrowers</span>
-                            <div class="stat-icon-wrapper stat-icon-emerald">
+                            <div class="stat-icon-wrapper stat-icon-blue">
                                 <i class="fa-solid fa-users"></i>
                             </div>
                         </div>
-                        <div class="stat-value"><?php echo $stats['total_borrowers']; ?></div>
+                        <div class="stat-value tabular-nums"><?php echo $stats['total_borrowers']; ?></div>
                         <div class="stat-footer-text">
                             <a href="<?php echo BASE_URL; ?>borrowers/index.php" class="text-decoration-none text-muted">
                                 <span class="text-primary fw-semibold"><?php echo $stats['active_loans']; ?></span> active loan<?php echo $stats['active_loans'] === 1 ? '' : 's'; ?> &bull; Directory <i class="fa-solid fa-arrow-right ms-1"></i>
@@ -159,7 +163,7 @@ require_once __DIR__ . '/includes/navbar.php';
                                 <i class="fa-solid fa-hand-holding-dollar"></i>
                             </div>
                         </div>
-                        <div class="stat-value"><?php echo CURRENCY_SYMBOL . number_format($stats['total_amount_lent'], 2); ?></div>
+                        <div class="stat-value tabular-nums"><?php echo CURRENCY_SYMBOL . number_format($stats['total_amount_lent'], 2); ?></div>
                         <div class="stat-footer-text">
                             <a href="<?php echo BASE_URL; ?>loans/index.php" class="text-decoration-none text-muted">
                                 <i class="fa-solid fa-arrow-trend-up me-1"></i> View all loans <i class="fa-solid fa-arrow-right ms-1"></i>
@@ -177,7 +181,7 @@ require_once __DIR__ . '/includes/navbar.php';
                                 <i class="fa-solid fa-piggy-bank"></i>
                             </div>
                         </div>
-                        <div class="stat-value text-success"><?php echo CURRENCY_SYMBOL . number_format($stats['total_amount_repaid'], 2); ?></div>
+                        <div class="stat-value tabular-nums text-success"><?php echo CURRENCY_SYMBOL . number_format($stats['total_amount_repaid'], 2); ?></div>
                         <div class="stat-footer-text">
                             <a href="<?php echo BASE_URL; ?>repayments/index.php" class="text-decoration-none text-muted">
                                 <i class="fa-solid fa-receipt me-1"></i> View collections <i class="fa-solid fa-arrow-right ms-1"></i>
@@ -195,7 +199,7 @@ require_once __DIR__ . '/includes/navbar.php';
                                 <i class="fa-solid fa-file-invoice-dollar"></i>
                             </div>
                         </div>
-                        <div class="stat-value text-danger"><?php echo CURRENCY_SYMBOL . number_format($stats['total_outstanding'], 2); ?></div>
+                        <div class="stat-value tabular-nums text-danger"><?php echo CURRENCY_SYMBOL . number_format($stats['total_outstanding'], 2); ?></div>
                         <div class="stat-footer-text">
                             <a href="<?php echo BASE_URL; ?>loans/index.php?status=active" class="text-decoration-none text-muted">
                                 <i class="fa-solid fa-clock me-1"></i> Active receivables <i class="fa-solid fa-arrow-right ms-1"></i>
