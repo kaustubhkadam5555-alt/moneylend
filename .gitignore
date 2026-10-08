@@ -31,3 +31,11 @@ Thumbs.db
 scratch/*_cookie.txt
 scratch/*.cookie
 scratch/*.tmp
+
+# Database backups and dumps
+*.sql.gz
+*.sql.tar.gz
+/backups/
+database/backups/
+*.dump
+

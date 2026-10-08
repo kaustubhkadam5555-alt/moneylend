@@ -37,6 +37,8 @@ if (str_contains($currentScript, '/borrowers/')) {
     $navSection = ['title' => 'Repayments', 'url' => BASE_URL . 'repayments/', 'icon' => 'fa-money-bill-wave'];
 } elseif (str_contains($currentScript, '/reports/')) {
     $navSection = ['title' => 'Reports & Analytics', 'url' => BASE_URL . 'reports/', 'icon' => 'fa-chart-line'];
+} elseif (str_contains($currentScript, '/settings/users.php')) {
+    $navSection = ['title' => 'User Management', 'url' => BASE_URL . 'settings/users.php', 'icon' => 'fa-user-shield'];
 } elseif (str_contains($currentScript, '/settings/')) {
     $navSection = ['title' => 'Settings', 'url' => BASE_URL . 'settings/', 'icon' => 'fa-gear'];
 } elseif (str_contains($currentScript, '/activity/')) {

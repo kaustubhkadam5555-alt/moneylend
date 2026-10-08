@@ -137,8 +137,22 @@ function get_activity_badge_info(string $action): array {
     switch ($action) {
         case 'login':
             return ['icon' => 'fa-right-to-bracket', 'badge' => 'bg-info-subtle text-info-emphasis border-info-subtle', 'label' => 'Login'];
+        case 'login_failed':
+            return ['icon' => 'fa-triangle-exclamation', 'badge' => 'bg-danger-subtle text-danger border-danger-subtle', 'label' => 'Failed Login'];
         case 'logout':
             return ['icon' => 'fa-right-from-bracket', 'badge' => 'bg-secondary-subtle text-secondary border-secondary-subtle', 'label' => 'Logout'];
+        case 'user_create':
+            return ['icon' => 'fa-user-plus', 'badge' => 'bg-primary-subtle text-primary border-primary-subtle', 'label' => 'User Created'];
+        case 'user_update':
+            return ['icon' => 'fa-user-pen', 'badge' => 'bg-info-subtle text-info-emphasis border-info-subtle', 'label' => 'User Updated'];
+        case 'user_activate':
+            return ['icon' => 'fa-user-check', 'badge' => 'bg-success-subtle text-success border-success-subtle', 'label' => 'User Activated'];
+        case 'user_deactivate':
+            return ['icon' => 'fa-user-slash', 'badge' => 'bg-danger-subtle text-danger border-danger-subtle', 'label' => 'User Deactivated'];
+        case 'user_role_change':
+            return ['icon' => 'fa-user-shield', 'badge' => 'bg-purple-subtle text-primary border-primary-subtle', 'label' => 'Role Changed'];
+        case 'user_password_reset':
+            return ['icon' => 'fa-key', 'badge' => 'bg-warning-subtle text-warning-emphasis border-warning-subtle', 'label' => 'Password Reset'];
         case 'borrower_create':
             return ['icon' => 'fa-user-plus', 'badge' => 'bg-primary-subtle text-primary border-primary-subtle', 'label' => 'Borrower Added'];
         case 'borrower_update':
@@ -161,6 +175,8 @@ function get_activity_badge_info(string $action): array {
             return ['icon' => 'fa-trash-can', 'badge' => 'bg-danger-subtle text-danger border-danger-subtle', 'label' => 'Repayment Deleted'];
         case 'settings_update':
             return ['icon' => 'fa-sliders', 'badge' => 'bg-secondary-subtle text-secondary border-secondary-subtle', 'label' => 'Settings Updated'];
+        case 'security_settings_update':
+            return ['icon' => 'fa-shield-halved', 'badge' => 'bg-dark-subtle text-dark border-secondary-subtle', 'label' => 'Security Config Updated'];
         case 'password_change':
             return ['icon' => 'fa-key', 'badge' => 'bg-warning-subtle text-warning-emphasis border-warning-subtle', 'label' => 'Password Changed'];
         default:

@@ -370,10 +370,13 @@ The application has been verified through automated regression suites and code a
 # 5. Run Phase 11 Notifications & Automation Suite (22 tests)
 /Applications/XAMPP/xamppfiles/bin/php scratch/test_phase11_notifications.php
 
-# 6. Run Scheduled Automation Engine CLI
+# 6. Run Phase 12 Advanced Security & Administration Suite (20+ tests)
+/Applications/XAMPP/xamppfiles/bin/php scratch/test_phase12_security_admin.php
+
+# 7. Run Scheduled Automation Engine CLI
 /Applications/XAMPP/xamppfiles/bin/php scripts/generate_notifications.php
 
-# 7. Run Global PHP Syntax Lint across all files
+# 8. Run Global PHP Syntax Lint across all files
 find . -name "*.php" -not -path "*/vendor/*" -print0 | xargs -0 -n1 /Applications/XAMPP/xamppfiles/bin/php -l
 ```
 
@@ -414,6 +417,31 @@ MoneyLend Phase 11 introduces a high-reliability, decoupled notification and rem
 
 ---
 
+## 🛡️ Phase 12 — Advanced Security & Administration Architecture
+
+MoneyLend Phase 12 delivers an enterprise-grade administration and security hardening layer:
+
+### 1. User Administration & Access Control (`/settings/users.php`)
+- **Centralized User Management:** Dedicated administrative portal to inspect registered accounts, view last login timestamps, toggle active/inactive account status, adjust role assignments, and initiate secure password resets.
+- **Strict Role-Based Access Control (RBAC):** Centralized authorization distinguishes between `admin` (full system access, configuration, user management) and `staff` (operational access to borrowers, loans, repayments, reports).
+- **Administrative Self-Protection:** Prevents an administrator from deactivating, demoting, or deleting their own active session.
+- **Last Active Admin Safeguard:** The application strictly forbids deactivating, demoting, or deleting the system's last remaining active administrator, eliminating lockout risk.
+
+### 2. Brute-Force Rate Limiting & Throttling
+- **Login Attempt Auditing:** Failed authentication attempts are logged in the `login_attempts` table, indexing client IP addresses and attempted emails.
+- **Progressive Throttling:** Enforces a configurable sliding-window lockout (default: 5 failed attempts within 15 minutes) before delaying subsequent authentication requests.
+- **Anti-Enumeration Protection:** Generic error responses (`"Invalid email or password."`) prevent malicious discovery of valid account emails.
+
+### 3. Dynamic Security Policies & Session Inactivity Guard
+- **Session Timeout Guard:** Automatically expires and logs out dormant sessions exceeding the configurable inactivity threshold (default: 30 minutes).
+- **Configurable Security Policies:** Administrators can calibrate session timeout, lockout durations, failed attempt limits, password length policies, and audit retention directly from the Security settings panel.
+- **Zero Credential Exposure:** Plaintext passwords and secret tokens are never stored, logged, or exposed in administrative interfaces.
+
+### 4. Comprehensive Security Documentation & Backup Guidelines
+- Full policy specifications, threat models, and disaster recovery procedures are documented in [`SECURITY.md`](SECURITY.md).
+
+---
+
 ## 📈 Completed Development Roadmap
 
 - [x] **Phase 1: Core Project Setup** — Directory structure, database schema, reusable layout parts, base styling, and routers.
@@ -432,6 +460,7 @@ MoneyLend Phase 11 introduces a high-reliability, decoupled notification and rem
 - [x] **Phase 9: Professional UI/UX Enhancement** — Modern dark-slate aesthetic, fluid responsive design system, animated micro-interactions, accessible status badges, and enhanced data visualizations.
 - [x] **Phase 10: Advanced MoneyLend Management Features** — Centralized activity and audit logging trail, official borrower & loan financial statements, print-ready document layouts, multi-parameter search and filtering, and real-time dashboard portfolio intelligence widgets.
 - [x] **Phase 11: Notifications & Automation** — Internal notification center, navbar bell unread counter, due-date and overdue reminder engine, idempotent CLI automation runner, notification preferences, and safe development email architecture.
+- [x] **Phase 12: Advanced Security & Administration** — Role-based access control (Admin/Staff), user administration portal, brute-force rate limiting, session inactivity timeout guards, self-protection and last-admin safeguards, dynamic security configuration, and formal disaster recovery documentation.
 
 ---
 

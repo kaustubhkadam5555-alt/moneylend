@@ -34,7 +34,7 @@ try {
     $totalLogs = (int)$pdo->query("SELECT COUNT(*) FROM activity_logs")->fetchColumn();
     $todayLogs = (int)$pdo->query("SELECT COUNT(*) FROM activity_logs WHERE DATE(created_at) = CURDATE()")->fetchColumn();
     $financialLogs = (int)$pdo->query("SELECT COUNT(*) FROM activity_logs WHERE entity_type IN ('loan', 'repayment')")->fetchColumn();
-    $authLogs = (int)$pdo->query("SELECT COUNT(*) FROM activity_logs WHERE action IN ('login', 'logout', 'password_change')")->fetchColumn();
+    $authLogs = (int)$pdo->query("SELECT COUNT(*) FROM activity_logs WHERE action IN ('login', 'login_failed', 'logout', 'password_change', 'user_create', 'user_update', 'user_activate', 'user_deactivate', 'user_role_change', 'user_password_reset', 'security_settings_update')")->fetchColumn();
 
     $filteredTotal = get_activity_count($pdo, $actionFilter ?: null, $entityFilter ?: null);
     $totalPages = max(1, (int)ceil($filteredTotal / $perPage));
@@ -156,7 +156,14 @@ require_once __DIR__ . '/../includes/navbar.php';
                             <select name="action" id="action" class="form-select">
                                 <option value="">All Actions</option>
                                 <option value="login" <?php echo ($actionFilter === 'login') ? 'selected' : ''; ?>>Login</option>
+                                <option value="login_failed" <?php echo ($actionFilter === 'login_failed') ? 'selected' : ''; ?>>Failed Login</option>
                                 <option value="logout" <?php echo ($actionFilter === 'logout') ? 'selected' : ''; ?>>Logout</option>
+                                <option value="user_create" <?php echo ($actionFilter === 'user_create') ? 'selected' : ''; ?>>User Created</option>
+                                <option value="user_update" <?php echo ($actionFilter === 'user_update') ? 'selected' : ''; ?>>User Updated</option>
+                                <option value="user_activate" <?php echo ($actionFilter === 'user_activate') ? 'selected' : ''; ?>>User Activated</option>
+                                <option value="user_deactivate" <?php echo ($actionFilter === 'user_deactivate') ? 'selected' : ''; ?>>User Deactivated</option>
+                                <option value="user_role_change" <?php echo ($actionFilter === 'user_role_change') ? 'selected' : ''; ?>>Role Changed</option>
+                                <option value="user_password_reset" <?php echo ($actionFilter === 'user_password_reset') ? 'selected' : ''; ?>>Password Reset</option>
                                 <option value="borrower_create" <?php echo ($actionFilter === 'borrower_create') ? 'selected' : ''; ?>>Borrower Added</option>
                                 <option value="borrower_update" <?php echo ($actionFilter === 'borrower_update') ? 'selected' : ''; ?>>Borrower Updated</option>
                                 <option value="borrower_delete" <?php echo ($actionFilter === 'borrower_delete') ? 'selected' : ''; ?>>Borrower Deleted</option>
@@ -167,6 +174,7 @@ require_once __DIR__ . '/../includes/navbar.php';
                                 <option value="repayment_update" <?php echo ($actionFilter === 'repayment_update') ? 'selected' : ''; ?>>Repayment Updated</option>
                                 <option value="repayment_delete" <?php echo ($actionFilter === 'repayment_delete') ? 'selected' : ''; ?>>Repayment Deleted</option>
                                 <option value="settings_update" <?php echo ($actionFilter === 'settings_update') ? 'selected' : ''; ?>>Settings Updated</option>
+                                <option value="security_settings_update" <?php echo ($actionFilter === 'security_settings_update') ? 'selected' : ''; ?>>Security Config Updated</option>
                                 <option value="password_change" <?php echo ($actionFilter === 'password_change') ? 'selected' : ''; ?>>Password Changed</option>
                             </select>
                         </div>

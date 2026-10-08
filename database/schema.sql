@@ -20,8 +20,12 @@ CREATE TABLE IF NOT EXISTS `users` (
   `email` VARCHAR(150) NOT NULL UNIQUE,
   `password` VARCHAR(255) NOT NULL,
   `role` ENUM('admin', 'staff') NOT NULL DEFAULT 'admin',
+  `status` ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+  `last_login_at` DATETIME DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX `idx_users_email` (`email`)
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_users_email` (`email`),
+  INDEX `idx_users_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
@@ -170,6 +174,19 @@ CREATE TABLE IF NOT EXISTS `notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
+-- 8. Table structure for table `login_attempts` (Phase 12)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `login_attempts` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `email` VARCHAR(150) NOT NULL,
+  `ip_address` VARCHAR(45) NOT NULL,
+  `attempted_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `is_successful` TINYINT(1) NOT NULL DEFAULT 0,
+  INDEX `idx_login_email_time` (`email`, `attempted_at`),
+  INDEX `idx_login_ip_time` (`ip_address`, `attempted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
 -- Seed Data for Default System Configuration
 -- ------------------------------------------------------------
 INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
@@ -188,16 +205,22 @@ INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
   ('notify_repayments', '1'),
   ('notify_loan_paid', '1'),
   ('reminder_due_days', '3'),
-  ('reminder_overdue_interval', '7')
+  ('reminder_overdue_interval', '7'),
+  ('session_timeout_minutes', '30'),
+  ('login_max_attempts', '5'),
+  ('login_lockout_minutes', '15'),
+  ('min_password_length', '8'),
+  ('audit_retention_days', '90')
 ON DUPLICATE KEY UPDATE `setting_key` = `setting_key`;
 
 -- ------------------------------------------------------------
 -- Optional Seed Data for Initial Admin User (Phase 2 readiness)
 -- Password for demo admin is: admin123
 -- ------------------------------------------------------------
-INSERT INTO `users` (`name`, `email`, `password`, `role`, `created_at`)
+INSERT INTO `users` (`name`, `email`, `password`, `role`, `status`, `created_at`)
 VALUES
-  ('Admin User', 'admin@moneylend.local', '$2y$12$7hFRW2CJzwAUebdpKhWCKOhX3Or6Cs1yvNUgitINHOfiCIt7ycg9i', 'admin', NOW())
+  ('Admin User', 'admin@moneylend.local', '$2y$12$7hFRW2CJzwAUebdpKhWCKOhX3Or6Cs1yvNUgitINHOfiCIt7ycg9i', 'admin', 'active', NOW())
 ON DUPLICATE KEY UPDATE `id` = `id`;
+
 
 

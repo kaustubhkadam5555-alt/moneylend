@@ -19,11 +19,15 @@ if (is_logged_in()) {
 
 $errorMessage = '';
 $loggedOutMessage = '';
+$sessionExpiredMessage = '';
 $inputEmail = '';
 
-// Check if user was redirected from logout
+// Check if user was redirected from logout or session timeout
 if (isset($_GET['logged_out']) && $_GET['logged_out'] == '1') {
     $loggedOutMessage = "You have been logged out successfully.";
+}
+if (isset($_GET['session_expired']) && $_GET['session_expired'] == '1') {
+    $sessionExpiredMessage = "Your session has expired due to inactivity. Please sign in again.";
 }
 
 // Process login attempt with MySQL database and password_verify
@@ -31,6 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $inputEmail = trim($_POST['email'] ?? '');
     $password = trim($_POST['password'] ?? '');
     $csrfToken = $_POST['csrf_token'] ?? '';
+    $clientIp = get_client_ip();
+
+    $pdo = getDBConnection();
 
     // Verify CSRF token
     if (!verify_csrf_token($csrfToken)) {
@@ -40,33 +47,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!filter_var($inputEmail, FILTER_VALIDATE_EMAIL)) {
         $errorMessage = "Please enter a valid email address format.";
     } else {
-        try {
-            $pdo = getDBConnection();
-            $stmt = $pdo->prepare("SELECT id, name, email, password, role FROM users WHERE email = :email LIMIT 1");
-            $stmt->execute([':email' => $inputEmail]);
-            $user = $stmt->fetch();
+        // Rate limiting check
+        $throttleInfo = check_login_throttled($pdo, $inputEmail, $clientIp);
+        if ($throttleInfo['throttled']) {
+            $remainingMins = max(1, (int)ceil($throttleInfo['remaining_seconds'] / 60));
+            $errorMessage = "Too many failed login attempts. Please wait {$remainingMins} minute(s) before trying again.";
+            log_activity($pdo, 'login_failed', 'user', null, "Rate-limited login attempt for: {$inputEmail}");
+        } else {
+            try {
+                $stmt = $pdo->prepare("SELECT id, name, email, password, role, status FROM users WHERE email = :email LIMIT 1");
+                $stmt->execute([':email' => $inputEmail]);
+                $user = $stmt->fetch();
 
-            if ($user && password_verify($password, $user['password'])) {
-                // Successful authentication
-                login_user([
-                    'id'    => (int)$user['id'],
-                    'name'  => $user['name'],
-                    'email' => $user['email'],
-                    'role'  => $user['role']
-                ]);
+                if ($user && password_verify($password, $user['password'])) {
+                    // Check if account is active
+                    if (($user['status'] ?? 'active') === 'inactive') {
+                        record_login_attempt($pdo, $inputEmail, $clientIp, false);
+                        log_activity($pdo, 'login_failed', 'user', (int)$user['id'], "Login attempt on inactive account: {$inputEmail}", (int)$user['id']);
+                        $errorMessage = "This account has been deactivated. Please contact an administrator.";
+                    } else {
+                        // Successful authentication
+                        record_login_attempt($pdo, $inputEmail, $clientIp, true);
+                        clear_failed_login_attempts($pdo, $inputEmail, $clientIp);
 
-                log_activity($pdo, 'login', 'user', (int)$user['id'], 'User signed in: ' . $user['name'], (int)$user['id']);
+                        // Update last login timestamp
+                        $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = :id")->execute([':id' => (int)$user['id']]);
 
-                set_flash('success', 'Welcome back, ' . htmlspecialchars($user['name']) . '! You have logged in successfully.');
-                header("Location: " . BASE_URL . "dashboard.php");
-                exit;
-            } else {
-                // Generic error to prevent user enumeration
-                $errorMessage = "Invalid email or password. Please verify your credentials and try again.";
+                        login_user([
+                            'id'     => (int)$user['id'],
+                            'name'   => $user['name'],
+                            'email'  => $user['email'],
+                            'role'   => $user['role'],
+                            'status' => $user['status'] ?? 'active'
+                        ]);
+
+                        log_activity($pdo, 'login', 'user', (int)$user['id'], 'User signed in: ' . $user['name'], (int)$user['id']);
+
+                        set_flash('success', 'Welcome back, ' . htmlspecialchars($user['name']) . '! You have logged in successfully.');
+                        header("Location: " . BASE_URL . "dashboard.php");
+                        exit;
+                    }
+                } else {
+                    // Record failed attempt
+                    record_login_attempt($pdo, $inputEmail, $clientIp, false);
+                    log_activity($pdo, 'login_failed', 'user', $user ? (int)$user['id'] : null, "Failed login attempt for: {$inputEmail}");
+
+                    // Generic error to prevent user enumeration
+                    $errorMessage = "Invalid email or password. Please verify your credentials and try again.";
+                }
+            } catch (PDOException $e) {
+                error_log("Login database error: " . $e->getMessage());
+                $errorMessage = "A system error occurred while verifying credentials. Please try again later.";
             }
-        } catch (PDOException $e) {
-            error_log("Login database error: " . $e->getMessage());
-            $errorMessage = "A system error occurred while verifying credentials. Please try again later.";
         }
     }
 }

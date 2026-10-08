@@ -16,6 +16,8 @@ if (str_contains($currentScript, '/borrowers/')) {
     $activePage = 'repayments';
 } elseif (str_contains($currentScript, '/reports/')) {
     $activePage = 'reports';
+} elseif (str_contains($currentScript, '/settings/users.php')) {
+    $activePage = 'users';
 } elseif (str_contains($currentScript, '/settings/')) {
     $activePage = 'settings';
 } elseif (str_contains($currentScript, '/activity/')) {
@@ -103,6 +105,13 @@ if (function_exists('getDBConnection') && function_exists('get_unread_notificati
             <i class="fa-solid fa-gear"></i>
             <span>Settings</span>
         </a>
+
+        <?php if (function_exists('is_admin') && is_admin()): ?>
+            <a href="<?php echo BASE_URL; ?>settings/users.php" class="sidebar-link <?php echo ($activePage === 'users') ? 'active' : ''; ?>" <?php echo ($activePage === 'users') ? 'aria-current="page"' : ''; ?>>
+                <i class="fa-solid fa-user-shield"></i>
+                <span>User Management</span>
+            </a>
+        <?php endif; ?>
     </div>
 
     <!-- Sidebar Footer / System Badge -->

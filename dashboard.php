@@ -128,6 +128,30 @@ try {
     ");
     $overdueLoans = $overdueLoansStmt->fetchAll();
 
+    // 10. Phase 12 Administration & Security Metrics (for Admin users)
+    $securityMetrics = [
+        'total_users'     => 1,
+        'active_users'    => 1,
+        'failed_attempts' => 0,
+        'recent_events'   => 0
+    ];
+    if (function_exists('is_admin') && is_admin()) {
+        try {
+            $userStatsStmt = $pdo->query("SELECT COUNT(*) AS total, COUNT(CASE WHEN status = 'active' THEN 1 END) AS active FROM users");
+            $uStats = $userStatsStmt->fetch();
+            $securityMetrics['total_users'] = (int)($uStats['total'] ?? 1);
+            $securityMetrics['active_users'] = (int)($uStats['active'] ?? 1);
+
+            $failedStmt = $pdo->query("SELECT COUNT(*) FROM login_attempts WHERE is_successful = 0 AND attempted_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)");
+            $securityMetrics['failed_attempts'] = (int)$failedStmt->fetchColumn();
+
+            $secEventsStmt = $pdo->query("SELECT COUNT(*) FROM activity_logs WHERE action IN ('login_failed', 'password_change', 'user_create', 'user_activate', 'user_deactivate', 'user_role_change', 'user_password_reset', 'security_settings_update') AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+            $securityMetrics['recent_events'] = (int)$secEventsStmt->fetchColumn();
+        } catch (Throwable $e) {
+            error_log("Dashboard security metrics error: " . $e->getMessage());
+        }
+    }
+
 } catch (PDOException $e) {
     error_log("Dashboard query error: " . $e->getMessage());
     // Safe fallbacks already initialized
@@ -139,6 +163,7 @@ try {
     $recentAlerts = [];
     $upcomingDueLoans = [];
     $overdueLoans = [];
+    $securityMetrics = ['total_users' => 1, 'active_users' => 1, 'failed_attempts' => 0, 'recent_events' => 0];
 }
 
 // Include template components
@@ -605,6 +630,116 @@ require_once __DIR__ . '/includes/navbar.php';
                     </div>
                 </div>
             </div>
+
+            <!-- Phase 12: Security & Administration Status (Admins Only) -->
+            <?php if (function_exists('is_admin') && is_admin()): ?>
+                <div class="row g-4 mt-1">
+                    <div class="col-12">
+                        <div class="content-card border-0 shadow-sm">
+                            <div class="content-card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="brand-icon-box" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                        <i class="fa-solid fa-shield-halved"></i>
+                                    </span>
+                                    <div>
+                                        <h3 class="content-card-title mb-0">Security &amp; Administrative Posture</h3>
+                                        <p class="content-card-subtitle mb-0">System integrity indicators, authentication safeguards, and operational access</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="<?php echo BASE_URL; ?>settings/users.php" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1">
+                                        <i class="fa-solid fa-user-shield"></i>
+                                        <span>User Management</span>
+                                    </a>
+                                    <a href="<?php echo BASE_URL; ?>settings/index.php?tab=security" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                                        <i class="fa-solid fa-gear"></i>
+                                        <span>Security Config</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="p-3 p-md-4">
+                                <div class="row g-3">
+                                    <div class="col-6 col-md-4 col-lg-2">
+                                        <div class="p-2 border rounded bg-light text-center">
+                                            <div class="text-muted small" style="font-size: 0.72rem;">Authentication</div>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle mt-1">
+                                                <i class="fa-solid fa-check me-1"></i> Protected
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-lg-2">
+                                        <div class="p-2 border rounded bg-light text-center">
+                                            <div class="text-muted small" style="font-size: 0.72rem;">CSRF Defense</div>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle mt-1">
+                                                <i class="fa-solid fa-check me-1"></i> Enabled
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-lg-2">
+                                        <div class="p-2 border rounded bg-light text-center">
+                                            <div class="text-muted small" style="font-size: 0.72rem;">Session Security</div>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle mt-1">
+                                                <i class="fa-solid fa-check me-1"></i> Enabled
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-lg-2">
+                                        <div class="p-2 border rounded bg-light text-center">
+                                            <div class="text-muted small" style="font-size: 0.72rem;">Prepared Queries</div>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle mt-1">
+                                                <i class="fa-solid fa-check me-1"></i> Enabled
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-lg-2">
+                                        <div class="p-2 border rounded bg-light text-center">
+                                            <div class="text-muted small" style="font-size: 0.72rem;">Audit Logging</div>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle mt-1">
+                                                <i class="fa-solid fa-check me-1"></i> Enabled
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-lg-2">
+                                        <div class="p-2 border rounded bg-light text-center">
+                                            <div class="text-muted small" style="font-size: 0.72rem;">Notifications</div>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle mt-1">
+                                                <i class="fa-solid fa-check me-1"></i> Enabled
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mt-2 pt-2 border-top">
+                                    <div class="col-12 col-md-4 d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-users text-primary"></i>
+                                        <div class="small">
+                                            <span class="text-muted">Accounts:</span>
+                                            <strong class="text-dark tabular-nums"><?php echo $securityMetrics['active_users']; ?> Active</strong>
+                                            <span class="text-muted">of <?php echo $securityMetrics['total_users']; ?></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4 d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-user-lock text-warning"></i>
+                                        <div class="small">
+                                            <span class="text-muted">Failed Logins (24h):</span>
+                                            <strong class="text-dark tabular-nums"><?php echo $securityMetrics['failed_attempts']; ?></strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4 d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-clock-rotate-left text-info"></i>
+                                        <div class="small">
+                                            <span class="text-muted">Security Events (7d):</span>
+                                            <strong class="text-dark tabular-nums"><?php echo $securityMetrics['recent_events']; ?></strong>
+                                            <a href="<?php echo BASE_URL; ?>activity/" class="ms-1 text-decoration-none">View Log &rarr;</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
 
         </div> <!-- End .content-container -->
 

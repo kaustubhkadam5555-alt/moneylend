@@ -63,7 +63,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // -------------------------------------------------------------
         if ($action === 'update_settings') {
             $activeTab = 'general';
-            $appName         = trim($_POST['app_name'] ?? '');
+            if (!is_admin()) {
+                $errors[] = "Access denied. Only administrators can modify application settings.";
+            } else {
+                $appName         = trim($_POST['app_name'] ?? '');
             $currencySymbol  = trim($_POST['currency_symbol'] ?? '₹');
             $currencyName    = trim($_POST['currency_name'] ?? 'Indian Rupee (₹)');
             $dateFormat      = trim($_POST['date_format'] ?? 'd/m/Y');
@@ -113,6 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
+    }
 
         // -------------------------------------------------------------
         // ACTION 2: UPDATE ADMIN PROFILE
@@ -187,10 +191,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = "Current password is incorrect.";
             }
 
+            $minPwdPolicy = (int)($settings['min_password_length'] ?? 8);
             if (empty($newPassword)) {
                 $errors[] = "Please enter a new password.";
-            } elseif (mb_strlen($newPassword) < 8) {
-                $errors[] = "New password must be at least 8 characters long.";
+            } elseif (mb_strlen($newPassword) < $minPwdPolicy) {
+                $errors[] = "New password must be at least {$minPwdPolicy} characters long.";
             }
 
             if ($newPassword !== $confirmPassword) {
@@ -213,6 +218,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } catch (PDOException $e) {
                     error_log("Password update error: " . $e->getMessage());
                     $errors[] = "Unable to change password. Please try again.";
+                }
+            }
+        }
+
+        // -------------------------------------------------------------
+        // ACTION 3B: UPDATE SECURITY CONFIGURATION (Admin only)
+        // -------------------------------------------------------------
+        elseif ($action === 'update_security_settings') {
+            $activeTab = 'security';
+            if (!is_admin()) {
+                $errors[] = "Access denied. Only administrators can modify security configurations.";
+            } else {
+                $sessionTimeout   = max(5, min(1440, (int)($_POST['session_timeout_minutes'] ?? 30)));
+                $loginMaxAttempts = max(3, min(20, (int)($_POST['login_max_attempts'] ?? 5)));
+                $loginLockout     = max(1, min(1440, (int)($_POST['login_lockout_minutes'] ?? 15)));
+                $minPwdLength     = max(6, min(64, (int)($_POST['min_password_length'] ?? 8)));
+                $auditRetention   = max(7, min(3650, (int)($_POST['audit_retention_days'] ?? 90)));
+
+                $secSettings = [
+                    'session_timeout_minutes' => (string)$sessionTimeout,
+                    'login_max_attempts'      => (string)$loginMaxAttempts,
+                    'login_lockout_minutes'   => (string)$loginLockout,
+                    'min_password_length'     => (string)$minPwdLength,
+                    'audit_retention_days'    => (string)$auditRetention,
+                ];
+
+                if (update_settings($secSettings)) {
+                    log_activity($pdo, 'security_settings_update', 'settings', null, 'Updated system security policies and session configuration');
+                    set_flash('success', "Security configurations saved successfully.");
+                    redirect(BASE_URL . "settings/index.php?tab=security");
+                } else {
+                    $errors[] = "Unable to save security configurations. Please try again.";
                 }
             }
         }
@@ -632,10 +669,13 @@ require_once __DIR__ . '/../includes/navbar.php';
         </div>
 
     <!-- Tab 3: Security & Password -->
-    <?php elseif ($activeTab === 'security'): ?>
+    <?php elseif ($activeTab === 'security'): 
+        $currentMinPwd = (int)($settings['min_password_length'] ?? 8);
+    ?>
         <div class="row g-4">
             <div class="col-lg-7">
-                <div class="card content-card border-0 shadow-sm">
+                <!-- Change Password Card -->
+                <div class="card content-card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-bottom py-3 px-4">
                         <div class="d-flex align-items-center gap-2">
                             <span class="brand-icon-box" style="width: 32px; height: 32px; font-size: 0.85rem;">
@@ -643,7 +683,7 @@ require_once __DIR__ . '/../includes/navbar.php';
                             </span>
                             <div>
                                 <h2 class="content-card-title mb-0">Change Password</h2>
-                                <span class="text-muted small">Update your administrative password with minimum 8 characters.</span>
+                                <span class="text-muted small">Update your account password (minimum <?php echo $currentMinPwd; ?> characters).</span>
                             </div>
                         </div>
                     </div>
@@ -668,19 +708,19 @@ require_once __DIR__ . '/../includes/navbar.php';
                                 <label for="new_password" class="form-label fw-semibold">New Password <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-key"></i></span>
-                                    <input type="password" class="form-control" id="new_password" name="new_password" required minlength="8" placeholder="At least 8 characters">
+                                    <input type="password" class="form-control" id="new_password" name="new_password" required minlength="<?php echo $currentMinPwd; ?>" placeholder="At least <?php echo $currentMinPwd; ?> characters">
                                     <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('new_password', this)">
                                         <i class="fa-solid fa-eye"></i>
                                     </button>
                                 </div>
-                                <div class="form-text">Must be at least 8 characters long. Passwords are encrypted with bcrypt.</div>
+                                <div class="form-text">Must be at least <?php echo $currentMinPwd; ?> characters long. Passwords are encrypted with bcrypt.</div>
                             </div>
 
                             <div class="mb-4">
                                 <label for="confirm_password" class="form-label fw-semibold">Confirm New Password <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-shield"></i></span>
-                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required minlength="8" placeholder="Re-type new password">
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required minlength="<?php echo $currentMinPwd; ?>" placeholder="Re-type new password">
                                     <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('confirm_password', this)">
                                         <i class="fa-solid fa-eye"></i>
                                     </button>
@@ -698,13 +738,76 @@ require_once __DIR__ . '/../includes/navbar.php';
                         </form>
                     </div>
                 </div>
+
+                <!-- Admin Security Configuration Card -->
+                <?php if (is_admin()): ?>
+                    <div class="card content-card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom py-3 px-4">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="brand-icon-box" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                </span>
+                                <div>
+                                    <h2 class="content-card-title mb-0">System Security Policies</h2>
+                                    <span class="text-muted small">Configure session limits, brute-force throttling, and password rules.</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-4">
+                            <form method="POST" action="<?php echo BASE_URL; ?>settings/index.php?tab=security" class="needs-validation" novalidate>
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="form_action" value="update_security_settings">
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label for="session_timeout_minutes" class="form-label fw-semibold small text-secondary">Session Inactivity Timeout (Minutes)</label>
+                                        <input type="number" class="form-control" id="session_timeout_minutes" name="session_timeout_minutes" min="5" max="1440" value="<?php echo htmlspecialchars($settings['session_timeout_minutes'] ?? '30'); ?>" required>
+                                        <div class="form-text">Auto-logs out inactive sessions (5 - 1440 mins).</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="min_password_length" class="form-label fw-semibold small text-secondary">Minimum Password Length (Chars)</label>
+                                        <input type="number" class="form-control" id="min_password_length" name="min_password_length" min="6" max="64" value="<?php echo htmlspecialchars($settings['min_password_length'] ?? '8'); ?>" required>
+                                        <div class="form-text">Enforced on password changes and user creation.</div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label for="login_max_attempts" class="form-label fw-semibold small text-secondary">Max Failed Login Attempts</label>
+                                        <input type="number" class="form-control" id="login_max_attempts" name="login_max_attempts" min="3" max="20" value="<?php echo htmlspecialchars($settings['login_max_attempts'] ?? '5'); ?>" required>
+                                        <div class="form-text">Failed attempts before IP/account is throttled.</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="login_lockout_minutes" class="form-label fw-semibold small text-secondary">Lockout Duration (Minutes)</label>
+                                        <input type="number" class="form-control" id="login_lockout_minutes" name="login_lockout_minutes" min="1" max="1440" value="<?php echo htmlspecialchars($settings['login_lockout_minutes'] ?? '15'); ?>" required>
+                                        <div class="form-text">Duration for temporary login rate limiting.</div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="audit_retention_days" class="form-label fw-semibold small text-secondary">Audit Log Retention Policy (Days)</label>
+                                    <input type="number" class="form-control" id="audit_retention_days" name="audit_retention_days" min="7" max="3650" value="<?php echo htmlspecialchars($settings['audit_retention_days'] ?? '90'); ?>" required>
+                                    <div class="form-text">Target retention period for system audit trail logs.</div>
+                                </div>
+
+                                <hr class="my-4">
+
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-secondary px-4 fw-semibold">
+                                        <i class="fa-solid fa-shield me-1"></i> Save Security Policies
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <!-- Security Policy Card -->
             <div class="col-lg-5">
                 <div class="card content-card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-bottom py-3">
-                        <h6 class="fw-bold text-dark mb-0"><i class="fa-solid fa-lock text-primary me-2"></i>Security Specifications</h6>
+                        <h6 class="fw-bold text-dark mb-0"><i class="fa-solid fa-lock text-primary me-2"></i>Security Specifications &amp; Posture</h6>
                     </div>
                     <div class="card-body p-3 small text-muted">
                         <div class="d-flex align-items-start gap-2 mb-2">
@@ -713,16 +816,35 @@ require_once __DIR__ . '/../includes/navbar.php';
                         </div>
                         <div class="d-flex align-items-start gap-2 mb-2">
                             <i class="fa-solid fa-check text-success mt-1"></i>
-                            <div><strong>Session Protection:</strong> Session cookies configured with <code>HttpOnly</code> and <code>SameSite=Lax</code> to prevent hijacking.</div>
+                            <div><strong>Session Protection:</strong> Strict session mode enabled with <code>HttpOnly</code> and <code>SameSite=Lax</code> to prevent cookie hijacking.</div>
+                        </div>
+                        <div class="d-flex align-items-start gap-2 mb-2">
+                            <i class="fa-solid fa-check text-success mt-1"></i>
+                            <div><strong>Brute-Force Rate Limiting:</strong> Enforces progressive throttling after <?php echo htmlspecialchars($settings['login_max_attempts'] ?? '5'); ?> failed attempts within <?php echo htmlspecialchars($settings['login_lockout_minutes'] ?? '15'); ?> minutes.</div>
+                        </div>
+                        <div class="d-flex align-items-start gap-2 mb-2">
+                            <i class="fa-solid fa-check text-success mt-1"></i>
+                            <div><strong>Session Inactivity Timeout:</strong> Automatic logout guard active at <?php echo htmlspecialchars($settings['session_timeout_minutes'] ?? '30'); ?> minutes of idle time.</div>
                         </div>
                         <div class="d-flex align-items-start gap-2 mb-2">
                             <i class="fa-solid fa-check text-success mt-1"></i>
                             <div><strong>CSRF Tokens:</strong> Every state-altering action validates a unique 256-bit cryptographic CSRF token.</div>
                         </div>
-                        <div class="d-flex align-items-start gap-2">
+                        <div class="d-flex align-items-start gap-2 mb-2">
                             <i class="fa-solid fa-check text-success mt-1"></i>
                             <div><strong>Prepared Statements:</strong> All database queries use parameterized PDO bindings to mitigate SQL injection.</div>
                         </div>
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fa-solid fa-check text-success mt-1"></i>
+                            <div><strong>Role-Based Access Control:</strong> Strict separation of privileges between administrators and operational staff.</div>
+                        </div>
+
+                        <?php if (is_admin()): ?>
+                            <hr class="my-3">
+                            <a href="<?php echo BASE_URL; ?>settings/users.php" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="fa-solid fa-user-shield me-1"></i> Manage System Users &amp; Roles
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
