@@ -55,6 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'role'  => $user['role']
                 ]);
 
+                log_activity($pdo, 'login', 'user', (int)$user['id'], 'User signed in: ' . $user['name'], (int)$user['id']);
+
                 set_flash('success', 'Welcome back, ' . htmlspecialchars($user['name']) . '! You have logged in successfully.');
                 header("Location: " . BASE_URL . "dashboard.php");
                 exit;

@@ -18,6 +18,8 @@ if (str_contains($currentScript, '/borrowers/')) {
     $activePage = 'reports';
 } elseif (str_contains($currentScript, '/settings/')) {
     $activePage = 'settings';
+} elseif (str_contains($currentScript, '/activity/')) {
+    $activePage = 'activity';
 } elseif (str_contains($currentScript, 'dashboard.php')) {
     $activePage = 'dashboard';
 } else {
@@ -69,6 +71,11 @@ if (str_contains($currentScript, '/borrowers/')) {
         <a href="<?php echo BASE_URL; ?>reports/" class="sidebar-link <?php echo ($activePage === 'reports') ? 'active' : ''; ?>" <?php echo ($activePage === 'reports') ? 'aria-current="page"' : ''; ?>>
             <i class="fa-solid fa-chart-line"></i>
             <span>Reports</span>
+        </a>
+
+        <a href="<?php echo BASE_URL; ?>activity/" class="sidebar-link <?php echo ($activePage === 'activity') ? 'active' : ''; ?>" <?php echo ($activePage === 'activity') ? 'aria-current="page"' : ''; ?>>
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>Activity Log</span>
         </a>
 
         <a href="<?php echo BASE_URL; ?>settings/" class="sidebar-link <?php echo ($activePage === 'settings') ? 'active' : ''; ?>" <?php echo ($activePage === 'settings') ? 'aria-current="page"' : ''; ?>>

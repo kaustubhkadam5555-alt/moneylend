@@ -133,6 +133,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':id'        => $borrowerId
                 ]);
 
+                log_activity($pdo, 'borrower_update', 'borrower', $borrowerId, 'Updated borrower profile: ' . $formData['full_name']);
+
                 set_flash('success', "Borrower updated successfully.");
                 header("Location: " . BASE_URL . "borrowers/view.php?id=" . $borrowerId);
                 exit;

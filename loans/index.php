@@ -22,6 +22,17 @@ $pdo = getDBConnection();
 // Filters & Search
 $search = trim($_GET['search'] ?? '');
 $statusFilter = trim($_GET['status'] ?? '');
+$borrowerFilter = (int)($_GET['borrower_id'] ?? 0);
+$interestFilter = trim($_GET['interest_type'] ?? '');
+$fromDate = trim($_GET['from_date'] ?? '');
+$toDate = trim($_GET['to_date'] ?? '');
+
+$allBorrowers = [];
+try {
+    $allBorrowers = $pdo->query("SELECT id, full_name FROM borrowers ORDER BY full_name ASC")->fetchAll();
+} catch (PDOException $e) {
+    $allBorrowers = [];
+}
 
 $query = "SELECT l.*, b.full_name AS borrower_name, b.phone AS borrower_phone, b.status AS borrower_status
           FROM loans l 
@@ -48,6 +59,26 @@ if (!empty($statusFilter)) {
         $query .= " AND l.status = :status";
         $params[':status'] = $statusFilter;
     }
+}
+
+if ($borrowerFilter > 0) {
+    $query .= " AND l.borrower_id = :borrower_id";
+    $params[':borrower_id'] = $borrowerFilter;
+}
+
+if (!empty($interestFilter) && in_array($interestFilter, ['flat', 'reducing'])) {
+    $query .= " AND l.interest_type = :interest_type";
+    $params[':interest_type'] = $interestFilter;
+}
+
+if (!empty($fromDate) && strtotime($fromDate)) {
+    $query .= " AND l.start_date >= :from_date";
+    $params[':from_date'] = $fromDate;
+}
+
+if (!empty($toDate) && strtotime($toDate)) {
+    $query .= " AND l.start_date <= :to_date";
+    $params[':to_date'] = $toDate;
 }
 
 $query .= " ORDER BY l.id DESC";
@@ -192,7 +223,7 @@ require_once __DIR__ . '/../includes/navbar.php';
             <div class="content-card mb-4">
                 <div class="p-3">
                     <form method="GET" action="<?php echo BASE_URL; ?>loans/index.php" class="row g-2 align-items-center">
-                        <div class="col-12 col-md-6 col-lg-7">
+                        <div class="col-12 col-md-4 col-lg-3">
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted border-end-0">
                                     <i class="fa-solid fa-magnifying-glass"></i>
@@ -201,12 +232,22 @@ require_once __DIR__ . '/../includes/navbar.php';
                                     type="text" 
                                     name="search" 
                                     class="form-control border-start-0 ps-0" 
-                                    placeholder="Search by borrower name, phone, or loan ID..." 
+                                    placeholder="Search borrower, phone, ID..." 
                                     value="<?php echo htmlspecialchars($search); ?>"
                                 >
                             </div>
                         </div>
-                        <div class="col-12 col-md-3 col-lg-3">
+                        <div class="col-6 col-md-3 col-lg-3">
+                            <select name="borrower_id" class="form-select">
+                                <option value="">All Borrowers</option>
+                                <?php foreach ($allBorrowers as $b): ?>
+                                    <option value="<?php echo (int)$b['id']; ?>" <?php echo ($borrowerFilter === (int)$b['id']) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($b['full_name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-2 col-lg-2">
                             <select name="status" class="form-select">
                                 <option value="">All Statuses</option>
                                 <option value="active" <?php echo ($statusFilter === 'active') ? 'selected' : ''; ?>>Active</option>
@@ -216,11 +257,18 @@ require_once __DIR__ . '/../includes/navbar.php';
                                 <option value="cancelled" <?php echo ($statusFilter === 'cancelled') ? 'selected' : ''; ?>>Cancelled</option>
                             </select>
                         </div>
-                        <div class="col-12 col-md-3 col-lg-2 d-flex gap-2">
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <select name="interest_type" class="form-select">
+                                <option value="">All Interest Models</option>
+                                <option value="flat" <?php echo ($interestFilter === 'flat') ? 'selected' : ''; ?>>Flat Rate</option>
+                                <option value="reducing" <?php echo ($interestFilter === 'reducing') ? 'selected' : ''; ?>>Reducing Balance</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-12 col-lg-2 d-flex gap-2">
                             <button type="submit" class="btn btn-secondary flex-grow-1">
                                 Filter
                             </button>
-                            <?php if ($search !== '' || $statusFilter !== ''): ?>
+                            <?php if ($search !== '' || $statusFilter !== '' || $borrowerFilter > 0 || $interestFilter !== '' || $fromDate !== '' || $toDate !== ''): ?>
                                 <a href="<?php echo BASE_URL; ?>loans/index.php" class="btn btn-outline-secondary" title="Clear Filters">
                                     <i class="fa-solid fa-rotate-left"></i>
                                 </a>

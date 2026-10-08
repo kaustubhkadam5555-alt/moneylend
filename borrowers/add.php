@@ -102,6 +102,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':status'    => $formData['status']
                 ]);
 
+                $newBorrowerId = (int)$pdo->lastInsertId();
+                log_activity($pdo, 'borrower_create', 'borrower', $newBorrowerId, 'Registered borrower: ' . $formData['full_name']);
+
                 set_flash('success', "Borrower created successfully.");
                 header("Location: " . BASE_URL . "borrowers/index.php");
                 exit;

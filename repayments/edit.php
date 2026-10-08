@@ -147,6 +147,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->commit();
 
+            log_activity($pdo, 'repayment_update', 'repayment', $repaymentId, 'Updated repayment installment #' . $repaymentId . ' (Amount: ' . CURRENCY_SYMBOL . number_format($newAmount, 2) . ')');
+
             set_flash("success", "Repayment updated successfully.");
             redirect(BASE_URL . "repayments/view.php?id={$repaymentId}");
 

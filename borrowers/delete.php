@@ -64,6 +64,8 @@ try {
     $deleteStmt = $pdo->prepare("DELETE FROM borrowers WHERE id = :id");
     $deleteStmt->execute([':id' => $borrowerId]);
 
+    log_activity($pdo, 'borrower_delete', 'borrower', $borrowerId, "Deleted borrower record: {$borrower['full_name']}");
+
     set_flash('success', "Borrower '{$borrower['full_name']}' has been permanently deleted.");
     header("Location: " . BASE_URL . "borrowers/index.php");
     exit;

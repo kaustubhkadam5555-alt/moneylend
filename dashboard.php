@@ -80,9 +80,25 @@ try {
     ");
     $recentRepayments = $recentRepaymentsStmt->fetchAll();
 
+    // 8. Phase 10 Intelligence Metrics
+    $totalPayable = (float)$pdo->query("SELECT COALESCE(SUM(total_payable), 0) FROM loans WHERE status != 'cancelled'")->fetchColumn();
+    $collectionRate = ($totalPayable > 0) ? min(100.0, round(($stats['total_amount_repaid'] / $totalPayable) * 100, 1)) : 0.0;
+
+    $overdueStmt = $pdo->query("SELECT COUNT(*) AS count, COALESCE(SUM(remaining_balance), 0) AS amount FROM loans WHERE status = 'overdue' OR (due_date < CURDATE() AND remaining_balance > 0 AND status != 'cancelled')");
+    $overdueData = $overdueStmt->fetch();
+    $overdueCount = (int)($overdueData['count'] ?? 0);
+    $overdueAmount = (float)($overdueData['amount'] ?? 0);
+
+    $dueSoonCount = (int)$pdo->query("SELECT COUNT(*) FROM loans WHERE status != 'cancelled' AND remaining_balance > 0 AND due_date >= CURDATE() AND due_date <= DATE_ADD(CURDATE(), INTERVAL 14 DAY)")->fetchColumn();
+
 } catch (PDOException $e) {
     error_log("Dashboard query error: " . $e->getMessage());
     // Safe fallbacks already initialized
+    $totalPayable = 0.0;
+    $collectionRate = 0.0;
+    $overdueCount = 0;
+    $overdueAmount = 0.0;
+    $dueSoonCount = 0;
 }
 
 // Include template components
@@ -209,6 +225,77 @@ require_once __DIR__ . '/includes/navbar.php';
                 </div>
             </div>
 
+            <!-- Phase 10 Dashboard Intelligence Widgets -->
+            <div class="row g-3 g-xl-4 mb-4">
+                <!-- Intelligence Card 1: Collection Rate Progress -->
+                <div class="col-12 col-md-4">
+                    <div class="content-card h-100 p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small text-uppercase fw-semibold">Portfolio Recovery Rate</span>
+                            <span class="badge bg-<?php echo ($collectionRate >= 80) ? 'success' : (($collectionRate >= 40) ? 'primary' : 'warning'); ?>-subtle text-<?php echo ($collectionRate >= 80) ? 'success' : (($collectionRate >= 40) ? 'primary' : 'warning'); ?> border">
+                                <?php echo $collectionRate; ?>%
+                            </span>
+                        </div>
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar <?php echo ($collectionRate >= 80) ? 'bg-success' : 'bg-primary'; ?>" 
+                                 style="width: <?php echo $collectionRate; ?>%;" 
+                                 role="progressbar" 
+                                 aria-valuenow="<?php echo $collectionRate; ?>" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Repaid: <?php echo CURRENCY_SYMBOL . number_format($stats['total_amount_repaid'], 2); ?></span>
+                            <span>Payable: <?php echo CURRENCY_SYMBOL . number_format($totalPayable, 2); ?></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Intelligence Card 2: Risk & Overdue Monitor -->
+                <div class="col-12 col-md-4">
+                    <div class="content-card h-100 p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small text-uppercase fw-semibold">Overdue Receivables</span>
+                            <span class="badge <?php echo ($overdueCount > 0) ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-success-subtle text-success border'; ?>">
+                                <?php echo $overdueCount; ?> Loan<?php echo $overdueCount === 1 ? '' : 's'; ?>
+                            </span>
+                        </div>
+                        <div class="h5 fw-bold <?php echo ($overdueCount > 0) ? 'text-danger' : 'text-success'; ?> mb-1">
+                            <?php echo CURRENCY_SYMBOL . number_format($overdueAmount, 2); ?>
+                        </div>
+                        <div class="small text-muted">
+                            <?php if ($overdueCount > 0): ?>
+                                <a href="<?php echo BASE_URL; ?>loans/index.php?status=overdue" class="text-danger fw-semibold text-decoration-none">
+                                    <i class="fa-solid fa-triangle-exclamation me-1"></i> Review overdue agreements &rarr;
+                                </a>
+                            <?php else: ?>
+                                <span class="text-success"><i class="fa-solid fa-circle-check me-1"></i> No overdue loans currently</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Intelligence Card 3: Due Soon & Audit Log Shortcut -->
+                <div class="col-12 col-md-4">
+                    <div class="content-card h-100 p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small text-uppercase fw-semibold">Upcoming Maturities (14d)</span>
+                            <span class="badge bg-light text-secondary border">
+                                <?php echo $dueSoonCount; ?> Due Soon
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="small text-muted">
+                                <?php echo $dueSoonCount; ?> loan contract<?php echo $dueSoonCount === 1 ? '' : 's'; ?> due within 2 weeks.
+                            </div>
+                            <a href="<?php echo BASE_URL; ?>activity/" class="btn btn-outline-secondary btn-sm ms-2 text-nowrap" title="View Audit Trail">
+                                <i class="fa-solid fa-list-check me-1"></i> Audit
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Activity Sections: Recent Loans & Recent Repayments -->
             <div class="row g-4">

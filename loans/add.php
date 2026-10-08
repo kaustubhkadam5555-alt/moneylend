@@ -162,6 +162,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             $newLoanId = (int)$pdo->lastInsertId();
+            log_activity($pdo, 'loan_create', 'loan', $newLoanId, 'Created loan agreement #' . $newLoanId . ' for principal ' . CURRENCY_SYMBOL . number_format($principal, 2));
+
             set_flash('success', "Loan created successfully.");
             header("Location: " . BASE_URL . "loans/view.php?id=" . $newLoanId);
             exit;

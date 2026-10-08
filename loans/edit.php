@@ -186,6 +186,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':id'               => $loanId
                 ]);
 
+                log_activity($pdo, 'loan_update', 'loan', $loanId, 'Updated loan agreement #' . $loanId . ' (Principal: ' . CURRENCY_SYMBOL . number_format($principal, 2) . ')');
+
                 set_flash('success', "Loan updated successfully.");
                 header("Location: " . BASE_URL . "loans/view.php?id=" . $loanId);
                 exit;

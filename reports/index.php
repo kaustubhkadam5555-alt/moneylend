@@ -170,8 +170,14 @@ try {
     $outMetricStmt->execute($outMetricParams);
     $financialSummary['total_outstanding'] = (float)$outMetricStmt->fetchColumn();
 
+    // 3d. Total Payable & Collection Rate (Phase 10)
+    $totalPayableReport = $financialSummary['total_principal'] + $financialSummary['total_interest'];
+    $collectionRateReport = ($totalPayableReport > 0) ? min(100.0, round(($financialSummary['total_repayments'] / $totalPayableReport) * 100, 1)) : 0.0;
+
 } catch (PDOException $e) {
     error_log("Financial summary calculation error: " . $e->getMessage());
+    $totalPayableReport = 0.0;
+    $collectionRateReport = 0.0;
 }
 
 // -------------------------------------------------------------
@@ -763,6 +769,33 @@ require_once __DIR__ . '/../includes/navbar.php';
                         <div class="stat-footer-text">
                             <i class="fa-solid fa-scale-balanced me-1 text-primary"></i> Contracted yield
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collection Performance Summary Bar -->
+            <div class="content-card mb-4 p-3 p-md-4">
+                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-2">
+                    <div>
+                        <span class="text-muted small text-uppercase fw-semibold">Portfolio Collection Performance</span>
+                        <div class="h4 fw-bold text-dark mb-0">
+                            <?php echo $collectionRateReport; ?>% Recovered
+                            <span class="text-muted fs-6 fw-normal">(<?php echo CURRENCY_SYMBOL . number_format($financialSummary['total_repayments'], 2); ?> collected of <?php echo CURRENCY_SYMBOL . number_format($totalPayableReport, 2); ?> total payable)</span>
+                        </div>
+                    </div>
+                    <div class="text-md-end">
+                        <span class="badge bg-<?php echo ($collectionRateReport >= 80) ? 'success' : (($collectionRateReport >= 40) ? 'primary' : 'warning'); ?>-subtle text-<?php echo ($collectionRateReport >= 80) ? 'success' : (($collectionRateReport >= 40) ? 'primary' : 'warning'); ?> border fs-6 px-3 py-1">
+                            Collection Rate: <?php echo $collectionRateReport; ?>%
+                        </span>
+                    </div>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar <?php echo ($collectionRateReport >= 80) ? 'bg-success' : 'bg-primary'; ?>" 
+                         style="width: <?php echo $collectionRateReport; ?>%;" 
+                         role="progressbar" 
+                         aria-valuenow="<?php echo $collectionRateReport; ?>" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
                     </div>
                 </div>
             </div>

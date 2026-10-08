@@ -7,7 +7,15 @@
  */
 
 require_once __DIR__ . '/config/config.php';
+require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/auth.php';
+
+// Log activity prior to destroying session
+if (isset($_SESSION['user_id'])) {
+    $uid = (int)$_SESSION['user_id'];
+    $uName = $_SESSION['user_name'] ?? 'User';
+    log_activity(getDBConnection(), 'logout', 'user', $uid, 'User signed out: ' . $uName, $uid);
+}
 
 // Destroy session and remove session cookies
 logout_user();

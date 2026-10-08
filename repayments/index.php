@@ -21,8 +21,16 @@ $pdo = getDBConnection();
 // Filters & Search
 $search = trim($_GET['search'] ?? '');
 $methodFilter = trim($_GET['method'] ?? '');
+$borrowerFilter = (int)($_GET['borrower_id'] ?? 0);
 $fromDate = trim($_GET['from_date'] ?? '');
 $toDate = trim($_GET['to_date'] ?? '');
+
+$allBorrowers = [];
+try {
+    $allBorrowers = $pdo->query("SELECT id, full_name FROM borrowers ORDER BY full_name ASC")->fetchAll();
+} catch (PDOException $e) {
+    $allBorrowers = [];
+}
 
 $query = "SELECT r.*, 
                  l.principal_amount, 
@@ -53,6 +61,12 @@ if ($search !== '') {
         $params[':search_name'] = "%{$search}%";
         $params[':search_phone'] = "%{$search}%";
     }
+}
+
+// Borrower filter
+if ($borrowerFilter > 0) {
+    $query .= " AND b.id = :borrower_id";
+    $params[':borrower_id'] = $borrowerFilter;
 }
 
 // Payment method filter
@@ -210,7 +224,7 @@ require_once __DIR__ . '/../includes/navbar.php';
                 <div class="p-3">
                     <form method="GET" action="<?php echo BASE_URL; ?>repayments/index.php" class="row g-2 align-items-center">
                         <!-- Search Keyword -->
-                        <div class="col-12 col-md-4 col-lg-4">
+                        <div class="col-12 col-md-3 col-lg-3">
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted border-end-0">
                                     <i class="fa-solid fa-magnifying-glass"></i>
@@ -219,14 +233,26 @@ require_once __DIR__ . '/../includes/navbar.php';
                                     type="text" 
                                     name="search" 
                                     class="form-control border-start-0 ps-0" 
-                                    placeholder="Search by client, phone, loan #, or receipt #..." 
+                                    placeholder="Search client, phone, ID..." 
                                     value="<?php echo htmlspecialchars($search); ?>"
                                 >
                             </div>
                         </div>
 
-                        <!-- Payment Method Filter -->
+                        <!-- Borrower Filter -->
                         <div class="col-6 col-md-3 col-lg-2">
+                            <select name="borrower_id" class="form-select">
+                                <option value="">All Clients</option>
+                                <?php foreach ($allBorrowers as $b): ?>
+                                    <option value="<?php echo (int)$b['id']; ?>" <?php echo ($borrowerFilter === (int)$b['id']) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($b['full_name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Payment Method Filter -->
+                        <div class="col-6 col-md-2 col-lg-2">
                             <select name="method" class="form-select">
                                 <option value="">All Methods</option>
                                 <option value="Cash" <?php echo ($methodFilter === 'Cash') ? 'selected' : ''; ?>>Cash</option>
@@ -260,11 +286,11 @@ require_once __DIR__ . '/../includes/navbar.php';
                         </div>
 
                         <!-- Submit & Clear -->
-                        <div class="col-6 col-md-1 col-lg-2 d-flex gap-2">
+                        <div class="col-12 col-md-12 col-lg-1 d-flex gap-2">
                             <button type="submit" class="btn btn-secondary flex-grow-1">
                                 Filter
                             </button>
-                            <?php if ($search !== '' || $methodFilter !== '' || $fromDate !== '' || $toDate !== ''): ?>
+                            <?php if ($search !== '' || $methodFilter !== '' || $borrowerFilter > 0 || $fromDate !== '' || $toDate !== ''): ?>
                                 <a href="<?php echo BASE_URL; ?>repayments/index.php" class="btn btn-outline-secondary" title="Clear Filters">
                                     <i class="fa-solid fa-rotate-left"></i>
                                 </a>

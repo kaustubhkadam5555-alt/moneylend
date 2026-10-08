@@ -124,15 +124,25 @@ require_once __DIR__ . '/../includes/navbar.php';
 
                 <!-- Action Buttons -->
                 <div class="d-flex flex-wrap align-items-center gap-2">
+                    <a href="<?php echo BASE_URL; ?>loans/statement.php?id=<?php echo $loanId; ?>" class="btn btn-outline-dark btn-sm d-flex align-items-center gap-1 shadow-2xs" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Statement</span>
+                    </a>
                     <a href="<?php echo BASE_URL; ?>loans/edit.php?id=<?php echo $loanId; ?>" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1">
                         <i class="fa-solid fa-pen-to-square"></i>
                         <span>Edit Loan</span>
                     </a>
-                    <?php if ($loan['status'] !== 'paid' && (float)$loan['remaining_balance'] > 0.001): ?>
+                    <?php if ($loan['status'] !== 'paid' && $loan['status'] !== 'cancelled' && (float)$loan['remaining_balance'] > 0.001): ?>
                         <a href="<?php echo BASE_URL; ?>repayments/add.php?loan_id=<?php echo $loanId; ?>" class="btn btn-success btn-sm d-flex align-items-center gap-1">
                             <i class="fa-solid fa-money-bill-transfer"></i>
                             <span>Record Repayment</span>
                         </a>
+                    <?php endif; ?>
+                    <?php if ($loan['status'] !== 'paid' && $loan['status'] !== 'cancelled'): ?>
+                        <button type="button" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#cancelLoanModal">
+                            <i class="fa-solid fa-ban"></i>
+                            <span>Cancel</span>
+                        </button>
                     <?php endif; ?>
                     <a href="<?php echo BASE_URL; ?>loans/index.php" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
                         <i class="fa-solid fa-arrow-left"></i>
@@ -377,6 +387,107 @@ require_once __DIR__ . '/../includes/navbar.php';
                     <?php endif; ?>
                 </div>
             </div>
+
+            <!-- Loan Lifecycle Timeline Card -->
+            <div class="content-card mt-4 mb-4">
+                <div class="content-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-timeline text-primary"></i>
+                        <h2 class="content-card-title">Loan Agreement Timeline &amp; Lifecycle</h2>
+                    </div>
+                    <span class="text-muted small">Sequential Milestones</span>
+                </div>
+                <div class="p-4">
+                    <div class="position-relative ms-3 border-start border-2 border-primary-subtle ps-4">
+                        <!-- Step 1: Disbursed -->
+                        <div class="mb-4 position-relative">
+                            <span class="position-absolute translate-middle-x rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="left: -33px; top: 0px; width: 22px; height: 22px; font-size: 0.65rem;">
+                                <i class="fa-solid fa-check"></i>
+                            </span>
+                            <div class="fw-bold text-dark">Agreement Created &amp; Disbursed</div>
+                            <div class="text-muted small"><?php echo date('F d, Y', strtotime($loan['start_date'])); ?> &bull; Principal of <?php echo CURRENCY_SYMBOL . number_format((float)$loan['principal_amount'], 2); ?> issued to <?php echo htmlspecialchars($loan['borrower_name']); ?></div>
+                        </div>
+
+                        <!-- Step 2: Repayments -->
+                        <div class="mb-4 position-relative">
+                            <span class="position-absolute translate-middle-x rounded-circle <?php echo (!empty($repayments)) ? 'bg-success text-white' : 'bg-light text-muted border'; ?> d-flex align-items-center justify-content-center" style="left: -33px; top: 0px; width: 22px; height: 22px; font-size: 0.65rem;">
+                                <i class="fa-solid <?php echo (!empty($repayments)) ? 'fa-money-bill' : 'fa-hourglass'; ?>"></i>
+                            </span>
+                            <div class="fw-bold text-dark">Repayment Installments (<?php echo count($repayments); ?> logged)</div>
+                            <?php if (!empty($repayments)): ?>
+                                <?php $latestRep = $repayments[0]; ?>
+                                <div class="text-muted small">
+                                    Total collected: <strong class="text-success"><?php echo CURRENCY_SYMBOL . number_format($amountRepaid, 2); ?></strong>. Latest payment of <?php echo CURRENCY_SYMBOL . number_format((float)$latestRep['amount'], 2); ?> on <?php echo date('M d, Y', strtotime($latestRep['payment_date'])); ?>.
+                                </div>
+                            <?php else: ?>
+                                <div class="text-muted small">No payments received yet. Waiting for first installment.</div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Step 3: Maturity / Closure -->
+                        <div class="position-relative">
+                            <span class="position-absolute translate-middle-x rounded-circle <?php echo ($loan['status'] === 'paid') ? 'bg-success text-white' : (($loan['status'] === 'cancelled') ? 'bg-secondary text-white' : (date('Y-m-d') > $loan['due_date'] ? 'bg-danger text-white' : 'bg-light text-muted border')); ?> d-flex align-items-center justify-content-center" style="left: -33px; top: 0px; width: 22px; height: 22px; font-size: 0.65rem;">
+                                <i class="fa-solid <?php echo ($loan['status'] === 'paid') ? 'fa-flag-checkered' : (($loan['status'] === 'cancelled') ? 'fa-ban' : 'fa-calendar-check'); ?>"></i>
+                            </span>
+                            <div class="fw-bold text-dark">
+                                <?php if ($loan['status'] === 'paid'): ?>
+                                    Agreement Fully Settled &amp; Closed
+                                <?php elseif ($loan['status'] === 'cancelled'): ?>
+                                    Agreement Cancelled
+                                <?php else: ?>
+                                    Maturity &amp; Due Date: <?php echo date('F d, Y', strtotime($loan['due_date'])); ?>
+                                <?php endif; ?>
+                            </div>
+                            <div class="text-muted small">
+                                <?php if ($loan['status'] === 'paid'): ?>
+                                    All principal and interest recovered in full.
+                                <?php elseif ($loan['status'] === 'cancelled'): ?>
+                                    This loan was marked as cancelled.
+                                <?php elseif (date('Y-m-d') > $loan['due_date']): ?>
+                                    <span class="text-danger fw-semibold">Agreement is past maturity date with <?php echo CURRENCY_SYMBOL . number_format($remainingBalance, 2); ?> outstanding.</span>
+                                <?php else: ?>
+                                    Scheduled closure date. Outstanding balance: <?php echo CURRENCY_SYMBOL . number_format($remainingBalance, 2); ?>.
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cancel Loan Modal -->
+            <?php if ($loan['status'] !== 'paid' && $loan['status'] !== 'cancelled'): ?>
+                <div class="modal fade" id="cancelLoanModal" tabindex="-1" aria-labelledby="cancelLoanModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header border-bottom-0 pb-0">
+                                <h5 class="modal-title text-danger fs-6" id="cancelLoanModalLabel">
+                                    <i class="fa-solid fa-triangle-exclamation me-1"></i> Cancel Loan Agreement
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="text-dark small mb-2">Are you sure you want to cancel <strong>Loan Agreement #<?php echo $loanId; ?></strong>?</p>
+                                <p class="text-muted small mb-0">
+                                    <?php if ($amountRepaid > 0): ?>
+                                        This loan has <strong><?php echo CURRENCY_SYMBOL . number_format($amountRepaid, 2); ?></strong> in recorded repayments. It will be marked as <strong>Cancelled</strong> to preserve audit integrity.
+                                    <?php else: ?>
+                                        No repayments have been recorded. This loan can be safely cancelled.
+                                    <?php endif; ?>
+                                </p>
+                            </div>
+                            <div class="modal-footer border-top-0 pt-0">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Keep Active</button>
+                                <form action="<?php echo BASE_URL; ?>loans/delete.php" method="POST" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                                    <input type="hidden" name="loan_id" value="<?php echo $loanId; ?>">
+                                    <input type="hidden" name="action_type" value="cancel">
+                                    <button type="submit" class="btn btn-danger btn-sm">Confirm Cancellation</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
 
         </div> <!-- End .content-container -->
 

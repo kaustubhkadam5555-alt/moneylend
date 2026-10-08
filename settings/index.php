@@ -105,6 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ];
 
                 if (update_settings($newSettings)) {
+                    log_activity($pdo, 'settings_update', 'settings', null, 'Updated system application settings');
                     set_flash('success', "Settings saved successfully.");
                     redirect(BASE_URL . "settings/index.php?tab=general");
                 } else {
@@ -160,6 +161,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['user_name']  = $adminName;
                     $_SESSION['user_email'] = $adminEmail;
 
+                    log_activity($pdo, 'profile_update', 'user', $currentUserId, 'Updated user profile: ' . $adminName);
+
                     set_flash('success', "Profile updated successfully.");
                     redirect(BASE_URL . "settings/index.php?tab=profile");
                 } catch (PDOException $e) {
@@ -202,6 +205,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':pwd' => $hashedPassword,
                         ':id'  => $currentUserId
                     ]);
+
+                    log_activity($pdo, 'password_change', 'user', $currentUserId, 'Changed user account password');
 
                     set_flash('success', "Password changed successfully.");
                     redirect(BASE_URL . "settings/index.php?tab=security");

@@ -59,6 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $pdo->commit();
 
+        log_activity($pdo, 'repayment_delete', 'repayment', $repaymentId, "Deleted repayment installment #{$repaymentId} of " . CURRENCY_SYMBOL . number_format($deletedAmount, 2) . " on Loan #{$loanId}");
+
         $formattedStatus = ucfirst(str_replace('_', ' ', $syncResult['status']));
         set_flash(
             'success', 

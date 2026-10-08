@@ -92,11 +92,15 @@ moneylend/
 │   └── images/
 │       └── .gitkeep               # Directory placeholder for static assets
 │
+├── activity/
+│   └── index.php                  # Centralized activity & audit trail with action/module filters
+│
 ├── borrowers/
 │   ├── index.php                  # Borrower directory listing with search and status filters
 │   ├── add.php                    # New client registration form with phone/email duplicate validation
 │   ├── edit.php                   # Borrower profile modification form
 │   ├── view.php                   # Detailed borrower profile, metric summary, and loan portfolio ledger
+│   ├── statement.php              # Printable official client financial statement & running debit/credit ledger
 │   └── delete.php                 # Foreign-key protected deletion handler
 │
 ├── loans/
@@ -104,6 +108,7 @@ moneylend/
 │   ├── add.php                    # Loan agreement origination form with real-time financial previews
 │   ├── edit.php                   # Loan agreement parameter modification and recalculation
 │   ├── view.php                   # Loan agreement details, repayment ledger, and progress indicators
+│   ├── statement.php              # Printable official loan statement with installment ledger & signatures
 │   └── delete.php                 # Safe loan cancellation or deletion handler
 │
 ├── repayments/
@@ -122,12 +127,15 @@ moneylend/
 │
 ├── database/
 │   ├── schema.sql                 # Clean database schema, tables, foreign keys, indexes, and defaults
-│   └── seed.sql                   # Safe demonstration seed data (sample borrowers, loans, repayments)
+│   ├── seed.sql                   # Safe demonstration seed data (sample borrowers, loans, repayments)
+│   └── migrations/                # Versioned sequential SQL schema migrations
+│       └── 001_add_activity_log.sql
 │
 ├── scratch/                       # Automated regression, security, and verification test suites
 │   ├── test_phase73_security.php         # Phase 7.3 dedicated security test suite (20 tests)
 │   ├── test_phase74_verification.php     # Phase 7.4 error and success handling test suite (11 tests)
-│   └── test_phase75_full_regression.php  # Phase 7.5 master end-to-end regression test suite (54 tests)
+│   ├── test_phase75_full_regression.php  # Phase 7.5 master end-to-end regression test suite (54 tests)
+│   └── test_phase10_advanced_features.php# Phase 10 advanced features test suite (28 tests)
 │
 ├── .gitignore                     # Git exclusion rules for OS files, local credentials, and test cookies
 ├── RELEASE_NOTES.md               # Version 1.0.0 release notes and feature summary
@@ -377,6 +385,8 @@ find . -name "*.php" -not -path "*/vendor/*" -print0 | xargs -0 -n1 /Application
 - [x] **Phase 7.5: Complete Functional Testing** — Comprehensive 54-test regression suite, complete end-to-end user journey verification, and database integrity checks.
 - [x] **Phase 7.6: Final Cleanup & Release Preparation** — Codebase sanitization, documentation completion, `.gitignore` tuning, and credential auditing.
 - [x] **Phase 8: GitHub & Release Setup** — Final repository audit, git hygiene, documentation finalization, release notes, and Version 1.0.0 release preparation.
+- [x] **Phase 9: Professional UI/UX Enhancement** — Modern dark-slate aesthetic, fluid responsive design system, animated micro-interactions, accessible status badges, and enhanced data visualizations.
+- [x] **Phase 10: Advanced MoneyLend Management Features** — Centralized activity and audit logging trail, official borrower & loan financial statements, print-ready document layouts, multi-parameter search and filtering, and real-time dashboard portfolio intelligence widgets.
 
 ---
 

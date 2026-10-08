@@ -39,6 +39,8 @@ if (str_contains($currentScript, '/borrowers/')) {
     $navSection = ['title' => 'Reports & Analytics', 'url' => BASE_URL . 'reports/', 'icon' => 'fa-chart-line'];
 } elseif (str_contains($currentScript, '/settings/')) {
     $navSection = ['title' => 'Settings', 'url' => BASE_URL . 'settings/', 'icon' => 'fa-gear'];
+} elseif (str_contains($currentScript, '/activity/')) {
+    $navSection = ['title' => 'Activity Log', 'url' => BASE_URL . 'activity/', 'icon' => 'fa-clock-rotate-left'];
 }
 ?>
             <!-- Quick breadcrumb / indicator on desktop -->

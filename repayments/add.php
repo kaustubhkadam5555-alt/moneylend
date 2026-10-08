@@ -184,6 +184,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->commit();
 
+            log_activity($pdo, 'repayment_create', 'repayment', $repaymentId, 'Recorded repayment #' . $repaymentId . ' of ' . CURRENCY_SYMBOL . number_format($paymentAmount, 2) . ' on Loan #' . $formData['loan_id']);
+
             // Success Flash Notification
             set_flash("success", "Repayment recorded successfully.");
 

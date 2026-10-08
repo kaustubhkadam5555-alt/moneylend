@@ -65,6 +65,8 @@ try {
         $cancelStmt = $pdo->prepare("UPDATE loans SET status = 'cancelled', updated_at = NOW() WHERE id = :id");
         $cancelStmt->execute([':id' => $loanId]);
 
+        log_activity($pdo, 'loan_cancel', 'loan', $loanId, "Cancelled loan agreement #{$loanId} (Audit integrity preserved)");
+
         set_flash('warning', "Loan agreement #{$loanId} has repayments recorded (" . CURRENCY_SYMBOL . number_format($repaidAmount, 2) . "). It was marked as Cancelled to preserve audit integrity.");
         header("Location: " . BASE_URL . "loans/index.php");
         exit;
@@ -72,6 +74,8 @@ try {
         // Safe permanent deletion (zero repayments)
         $delStmt = $pdo->prepare("DELETE FROM loans WHERE id = :id");
         $delStmt->execute([':id' => $loanId]);
+
+        log_activity($pdo, 'loan_delete', 'loan', $loanId, "Deleted loan agreement #{$loanId}");
 
         set_flash('success', "Loan agreement #{$loanId} has been permanently deleted.");
         header("Location: " . BASE_URL . "loans/index.php");
