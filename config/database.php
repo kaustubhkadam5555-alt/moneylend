@@ -6,15 +6,42 @@
  * database communication with MySQL / MariaDB in XAMPP.
  */
 
+// Load .env configuration if present (without external dependencies)
+$envFile = dirname(__DIR__) . '/.env';
+if (file_exists($envFile) && is_readable($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#')) {
+            continue;
+        }
+        if (str_contains($line, '=')) {
+            list($name, $val) = explode('=', $line, 2);
+            $name = trim($name);
+            $val = trim($val);
+            if ((str_starts_with($val, '"') && str_ends_with($val, '"')) ||
+                (str_starts_with($val, "'") && str_ends_with($val, "'"))) {
+                $val = substr($val, 1, -1);
+            }
+            if (!isset($_ENV[$name])) {
+                $_ENV[$name] = $val;
+            }
+            if (getenv($name) === false) {
+                putenv("{$name}={$val}");
+            }
+        }
+    }
+}
+
 // Database Configuration Constants
-// Change these settings according to your local environment
+// Allows environment variables or defaults to local XAMPP configuration
 if (!defined('DB_HOST')) {
-    define('DB_HOST', 'localhost');
-    define('DB_PORT', '3306');
-    define('DB_NAME', 'moneylend');
-    define('DB_USER', 'root');
-    define('DB_PASS', '');
-    define('DB_CHARSET', 'utf8mb4');
+    define('DB_HOST', getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? 'localhost'));
+    define('DB_PORT', getenv('DB_PORT') ?: ($_ENV['DB_PORT'] ?? '3306'));
+    define('DB_NAME', getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? 'moneylend'));
+    define('DB_USER', getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? 'root'));
+    define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : ($_ENV['DB_PASS'] ?? ''));
+    define('DB_CHARSET', getenv('DB_CHARSET') ?: ($_ENV['DB_CHARSET'] ?? 'utf8mb4'));
 }
 
 /**

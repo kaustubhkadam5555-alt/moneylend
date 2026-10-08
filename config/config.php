@@ -24,12 +24,19 @@ if (!defined('APP_NAME')) {
     // Application branding
     define('APP_NAME', !empty($appName) ? $appName : 'MoneyLend');
     define('APP_TAGLINE', 'Simple Lending. Smarter Tracking.');
-    define('APP_VERSION', '1.0.0');
+    define('APP_VERSION', '1.3.0');
 
     // Base URL configuration (Points to the web root of this application)
-    // Adjust if deployed to a virtual host or subfolder
+    // Adjust via environment variable APP_URL or default to /moneylend/
     if (!defined('BASE_URL')) {
-        define('BASE_URL', '/moneylend/');
+        $envAppUrl = getenv('APP_URL') ?: ($_ENV['APP_URL'] ?? '');
+        if (!empty($envAppUrl)) {
+            $parsedPath = parse_url($envAppUrl, PHP_URL_PATH);
+            $baseUrlPath = !empty($parsedPath) ? rtrim($parsedPath, '/') . '/' : '/';
+            define('BASE_URL', $baseUrlPath);
+        } else {
+            define('BASE_URL', '/moneylend/');
+        }
     }
 
     // Timezone Configuration (India Standard Time)
@@ -41,10 +48,22 @@ if (!defined('APP_NAME')) {
     define('APP_DATE_FORMAT', !empty($dateFormat) ? $dateFormat : 'd/m/Y');
 
     // Environment and Error Reporting
-    // Set to 'development' during local development, change to 'production' for live deployment
-    define('APP_ENV', 'development');
+    // Set APP_ENV to 'production' for live deployment
+    $envAppEnv = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'development');
+    if (!defined('APP_ENV')) {
+        define('APP_ENV', in_array($envAppEnv, ['production', 'development', 'testing'], true) ? $envAppEnv : 'development');
+    }
 
-    if (APP_ENV === 'development') {
+    $envAppDebug = getenv('APP_DEBUG');
+    if ($envAppDebug === false && isset($_ENV['APP_DEBUG'])) {
+        $envAppDebug = $_ENV['APP_DEBUG'];
+    }
+    $isDebug = (APP_ENV === 'development') && ($envAppDebug !== 'false' && $envAppDebug !== '0');
+    if (!defined('APP_DEBUG')) {
+        define('APP_DEBUG', $isDebug);
+    }
+
+    if (APP_DEBUG) {
         ini_set('display_errors', '1');
         ini_set('display_startup_errors', '1');
         error_reporting(E_ALL);

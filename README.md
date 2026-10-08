@@ -123,22 +123,41 @@ moneylend/
 │   └── export.php                 # Streaming CSV export for loans and repayments with formula defense
 │
 ├── settings/
-│   └── index.php                  # Multi-tab settings portal (General Defaults, Admin Profile, Password)
+│   ├── index.php                  # Multi-tab settings portal (General Defaults, Admin Profile, Password)
+│   ├── security.php               # System security policies, rate-limiting & timeout settings
+│   └── users.php                  # User administration & role management (admin only)
+│
+├── notifications/
+│   ├── index.php                  # Internal notification center & alert filters
+│   └── preferences.php            # User notification alert preferences
+│
+├── scripts/
+│   └── generate_notifications.php # CLI scheduled runner for due/overdue reminder automation
 │
 ├── database/
 │   ├── schema.sql                 # Clean database schema, tables, foreign keys, indexes, and defaults
 │   ├── seed.sql                   # Safe demonstration seed data (sample borrowers, loans, repayments)
 │   └── migrations/                # Versioned sequential SQL schema migrations
-│       └── 001_add_activity_log.sql
+│       ├── 001_add_activity_log.sql
+│       ├── 002_add_notifications.sql
+│       └── 003_add_security_admin.sql
 │
 ├── scratch/                       # Automated regression, security, and verification test suites
 │   ├── test_phase73_security.php         # Phase 7.3 dedicated security test suite (20 tests)
 │   ├── test_phase74_verification.php     # Phase 7.4 error and success handling test suite (11 tests)
 │   ├── test_phase75_full_regression.php  # Phase 7.5 master end-to-end regression test suite (54 tests)
-│   └── test_phase10_advanced_features.php# Phase 10 advanced features test suite (28 tests)
+│   ├── test_phase10_advanced_features.php# Phase 10 advanced features test suite (28 tests)
+│   ├── test_phase11_notifications.php    # Phase 11 notifications & reminder suite (22 tests)
+│   ├── test_phase12_security_admin.php   # Phase 12 security & admin test suite (22 tests)
+│   └── test_phase13_production_readiness.php # Phase 13 production readiness suite (12 tests)
 │
+├── .htaccess                      # Apache security headers, index prevention, and sensitive path blocking
 ├── .gitignore                     # Git exclusion rules for OS files, local credentials, and test cookies
-├── RELEASE_NOTES.md               # Version 1.0.0 release notes and feature summary
+├── .env.example                   # Environment configuration template with placeholders
+├── CHANGELOG.md                   # Chronological version change log (v1.0.0 through v1.3.0)
+├── DEPLOYMENT.md                  # Comprehensive local & production deployment and operations guide
+├── SECURITY.md                    # Security architecture, RBAC, and disaster recovery policy
+├── RELEASE_NOTES.md               # Version 1.3.0 release notes and feature summary
 └── README.md                      # Comprehensive technical documentation and deployment guide
 ```
 
@@ -338,20 +357,24 @@ MoneyLend implements defensive programming practices and multi-tier controls:
 The application has been verified through automated regression suites and code audits:
 
 ### Test Execution Results:
-- **Total Tests Executed:** 85
-- **Passed:** 85 (100%)
+- **Total Tests Executed:** 169 (Automated regression suites)
+- **Passed:** 169 (100%)
 - **Failed:** 0
 - **Security Checks (`test_phase73_security.php`):** 20 / 20 PASS
 - **Verification Tests (`test_phase74_verification.php`):** 11 / 11 PASS
 - **Master Regression Tests (`test_phase75_full_regression.php`):** 54 / 54 PASS
+- **Phase 10 Advanced Features (`test_phase10_advanced_features.php`):** 28 / 28 PASS
+- **Phase 11 Notifications & Automation (`test_phase11_notifications.php`):** 22 / 22 PASS
+- **Phase 12 Security & Administration (`test_phase12_security_admin.php`):** 22 / 22 PASS
+- **Phase 13 Production Readiness (`test_phase13_production_readiness.php`):** 12 / 12 PASS
 - **PHP Syntax Validation:** 34 / 34 PHP files checked (`0 syntax errors detected`)
 - **Database Integrity:** Verified (0 orphaned records; baseline financial totals intact)
 - **Responsive Viewports:** Desktop (1440px, 1280px, 1024px), Tablet (768px), and Mobile (430px, 390px, 375px) audited
-- **Primary End-to-End Workflow:** 11-step complete acceptance journey verified
+- **Primary End-to-End Workflow:** Complete 14-stage acceptance journey verified
 
 > [!NOTE]
 > **Browser Automation Limitation Note:**  
-> Headless browser automation via Playwright could not complete during Phase 7.5 due to an external network 404 driver download failure on macOS ARM64 (`playwright-1.57.0-mac-arm64.zip` from Microsoft CDN). Automated functional regression testing and verification were successfully performed using PHP/cURL regression test suites and code-level audits, validating HTTP response codes, security headers, DOM output, and responsive CSS rules.
+> Headless browser automation via Playwright could not complete due to an external network 404 driver download failure on macOS ARM64 (`playwright-1.57.0-mac-arm64.zip` from Microsoft CDN). Automated functional regression testing and verification were successfully performed using PHP/cURL regression test suites and code-level audits, validating HTTP response codes, security headers, DOM output, and responsive CSS rules.
 
 ### Running Test Suites Locally:
 ```bash
@@ -370,13 +393,16 @@ The application has been verified through automated regression suites and code a
 # 5. Run Phase 11 Notifications & Automation Suite (22 tests)
 /Applications/XAMPP/xamppfiles/bin/php scratch/test_phase11_notifications.php
 
-# 6. Run Phase 12 Advanced Security & Administration Suite (20+ tests)
+# 6. Run Phase 12 Advanced Security & Administration Suite (22 tests)
 /Applications/XAMPP/xamppfiles/bin/php scratch/test_phase12_security_admin.php
 
-# 7. Run Scheduled Automation Engine CLI
+# 7. Run Phase 13 Production Readiness & Smoke Suite (12 tests)
+/Applications/XAMPP/xamppfiles/bin/php scratch/test_phase13_production_readiness.php
+
+# 8. Run Scheduled Automation Engine CLI
 /Applications/XAMPP/xamppfiles/bin/php scripts/generate_notifications.php
 
-# 8. Run Global PHP Syntax Lint across all files
+# 9. Run Global PHP Syntax Lint across all files
 find . -name "*.php" -not -path "*/vendor/*" -print0 | xargs -0 -n1 /Applications/XAMPP/xamppfiles/bin/php -l
 ```
 
@@ -461,6 +487,7 @@ MoneyLend Phase 12 delivers an enterprise-grade administration and security hard
 - [x] **Phase 10: Advanced MoneyLend Management Features** — Centralized activity and audit logging trail, official borrower & loan financial statements, print-ready document layouts, multi-parameter search and filtering, and real-time dashboard portfolio intelligence widgets.
 - [x] **Phase 11: Notifications & Automation** — Internal notification center, navbar bell unread counter, due-date and overdue reminder engine, idempotent CLI automation runner, notification preferences, and safe development email architecture.
 - [x] **Phase 12: Advanced Security & Administration** — Role-based access control (Admin/Staff), user administration portal, brute-force rate limiting, session inactivity timeout guards, self-protection and last-admin safeguards, dynamic security configuration, and formal disaster recovery documentation.
+- [x] **Phase 13: Deployment, Production Readiness & Final Release** — Decoupled environment configuration (.env), Apache server hardening (.htaccess), DEPLOYMENT.md operations guide, CHANGELOG.md, full regression matrix verification, zero-leakage error suppression, and v1.3.0 final release preparation.
 
 ---
 
