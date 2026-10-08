@@ -91,6 +91,43 @@ try {
 
     $dueSoonCount = (int)$pdo->query("SELECT COUNT(*) FROM loans WHERE status != 'cancelled' AND remaining_balance > 0 AND due_date >= CURDATE() AND due_date <= DATE_ADD(CURDATE(), INTERVAL 14 DAY)")->fetchColumn();
 
+    // 9. Phase 11 Notification & Schedule Queries
+    $dashboardUserId = (int)($_SESSION['user_id'] ?? 1);
+    $recentAlerts = function_exists('get_user_notifications') ? get_user_notifications($pdo, $dashboardUserId, [], 4, 0) : [];
+
+    // Upcoming Due Loans (Detailed list for widget)
+    $upcomingDueStmt = $pdo->query("
+        SELECT 
+            l.id, l.borrower_id, l.principal_amount, l.remaining_balance, l.due_date,
+            DATEDIFF(l.due_date, CURDATE()) AS days_left,
+            b.full_name AS borrower_name, b.phone AS borrower_phone
+        FROM loans l
+        JOIN borrowers b ON l.borrower_id = b.id
+        WHERE l.status NOT IN ('cancelled', 'paid')
+          AND l.remaining_balance > 0.001
+          AND l.due_date >= CURDATE()
+          AND l.due_date <= DATE_ADD(CURDATE(), INTERVAL 14 DAY)
+        ORDER BY l.due_date ASC
+        LIMIT 4
+    ");
+    $upcomingDueLoans = $upcomingDueStmt->fetchAll();
+
+    // Overdue Loans (Detailed list for widget)
+    $overdueLoansStmt = $pdo->query("
+        SELECT 
+            l.id, l.borrower_id, l.principal_amount, l.remaining_balance, l.due_date,
+            DATEDIFF(CURDATE(), l.due_date) AS days_overdue,
+            b.full_name AS borrower_name, b.phone AS borrower_phone
+        FROM loans l
+        JOIN borrowers b ON l.borrower_id = b.id
+        WHERE (l.status = 'overdue' OR l.due_date < CURDATE())
+          AND l.status != 'cancelled'
+          AND l.remaining_balance > 0.001
+        ORDER BY l.due_date ASC
+        LIMIT 4
+    ");
+    $overdueLoans = $overdueLoansStmt->fetchAll();
+
 } catch (PDOException $e) {
     error_log("Dashboard query error: " . $e->getMessage());
     // Safe fallbacks already initialized
@@ -99,6 +136,9 @@ try {
     $overdueCount = 0;
     $overdueAmount = 0.0;
     $dueSoonCount = 0;
+    $recentAlerts = [];
+    $upcomingDueLoans = [];
+    $overdueLoans = [];
 }
 
 // Include template components
@@ -296,6 +336,121 @@ require_once __DIR__ . '/includes/navbar.php';
                     </div>
                 </div>
             </div>
+
+            <!-- Phase 11 Notification & Maturity Monitoring Grid -->
+            <?php if (!empty($upcomingDueLoans) || !empty($overdueLoans) || !empty($recentAlerts)): ?>
+            <div class="row g-3 g-xl-4 mb-4">
+                <!-- Widget 1: Upcoming Due / Overdue Watchlist -->
+                <div class="col-12 col-lg-6">
+                    <div class="content-card h-100">
+                        <div class="content-card-header d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-clock-rotate-left text-primary"></i>
+                                <h2 class="content-card-title mb-0">Upcoming Due Dates</h2>
+                            </div>
+                            <?php if (!empty($upcomingDueLoans)): ?>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><?php echo count($upcomingDueLoans); ?> Soon</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="card-body p-0">
+                            <?php if (empty($upcomingDueLoans)): ?>
+                                <div class="text-center py-4 text-muted small">
+                                    <i class="fa-solid fa-circle-check text-success fs-4 mb-2 d-block"></i>
+                                    No loans approaching due date within 14 days.
+                                </div>
+                            <?php else: ?>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 small">
+                                        <thead class="table-light text-muted">
+                                            <tr>
+                                                <th class="ps-3">Borrower &amp; Loan</th>
+                                                <th>Due Date</th>
+                                                <th>Outstanding</th>
+                                                <th class="text-end pe-3">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($upcomingDueLoans as $udl): ?>
+                                                <tr>
+                                                    <td class="ps-3">
+                                                        <div class="fw-semibold text-dark">
+                                                            <a href="<?php echo BASE_URL; ?>borrowers/view.php?id=<?php echo (int)$udl['borrower_id']; ?>" class="text-dark text-decoration-none">
+                                                                <?php echo htmlspecialchars($udl['borrower_name']); ?>
+                                                            </a>
+                                                        </div>
+                                                        <span class="text-muted" style="font-size: 0.72rem;">Loan #LN-<?php echo (int)$udl['id']; ?></span>
+                                                    </td>
+                                                    <td>
+                                                        <div><?php echo date('M d, Y', strtotime($udl['due_date'])); ?></div>
+                                                        <span class="badge <?php echo ((int)$udl['days_left'] <= 3) ? 'bg-warning-subtle text-warning-emphasis' : 'bg-light text-secondary border'; ?>" style="font-size: 0.68rem;">
+                                                            <?php echo ((int)$udl['days_left'] === 0) ? 'Due Today' : 'In ' . (int)$udl['days_left'] . ' day(s)'; ?>
+                                                        </span>
+                                                    </td>
+                                                    <td class="fw-semibold text-danger tabular-nums">
+                                                        <?php echo CURRENCY_SYMBOL . number_format((float)$udl['remaining_balance'], 2); ?>
+                                                    </td>
+                                                    <td class="text-end pe-3">
+                                                        <a href="<?php echo BASE_URL; ?>loans/view.php?id=<?php echo (int)$udl['id']; ?>" class="btn btn-sm btn-outline-secondary py-0 px-2" title="View Loan Agreement">
+                                                            <i class="fa-solid fa-eye"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Widget 2: Recent Alerts -->
+                <div class="col-12 col-lg-6">
+                    <div class="content-card h-100">
+                        <div class="content-card-header d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-bell text-info"></i>
+                                <h2 class="content-card-title mb-0">Recent Alerts</h2>
+                            </div>
+                            <a href="<?php echo BASE_URL; ?>notifications/" class="small text-decoration-none">View All &rarr;</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <?php if (empty($recentAlerts)): ?>
+                                <div class="text-center py-4 text-muted small">
+                                    <i class="fa-regular fa-bell-slash text-secondary fs-4 mb-2 d-block"></i>
+                                    No alerts logged yet. System is clear.
+                                </div>
+                            <?php else: ?>
+                                <ul class="list-group list-group-flush mb-0 small">
+                                    <?php foreach ($recentAlerts as $ra): 
+                                        $bInfo = get_notification_badge_info($ra['type'], $ra['severity']);
+                                    ?>
+                                        <li class="list-group-item px-3 py-2 d-flex align-items-start gap-2 <?php echo empty($ra['is_read']) ? 'bg-light bg-opacity-75' : ''; ?>">
+                                            <span class="badge <?php echo $bInfo['badge']; ?> p-1 px-2 mt-1">
+                                                <i class="fa-solid <?php echo $bInfo['icon']; ?>"></i>
+                                            </span>
+                                            <div class="flex-grow-1 overflow-hidden">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <a href="<?php echo BASE_URL; ?>notifications/?id=<?php echo (int)$ra['id']; ?>" class="text-decoration-none fw-semibold text-truncate <?php echo empty($ra['is_read']) ? 'text-primary' : 'text-dark'; ?>">
+                                                        <?php echo htmlspecialchars($ra['title']); ?>
+                                                    </a>
+                                                    <span class="text-muted ms-2" style="font-size: 0.68rem;">
+                                                        <?php echo date('M d, H:i', strtotime($ra['created_at'])); ?>
+                                                    </span>
+                                                </div>
+                                                <div class="text-muted text-truncate" style="font-size: 0.75rem;">
+                                                    <?php echo htmlspecialchars($ra['message']); ?>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <!-- Activity Sections: Recent Loans & Recent Repayments -->
             <div class="row g-4">

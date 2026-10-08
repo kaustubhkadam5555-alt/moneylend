@@ -1036,7 +1036,38 @@ textarea:focus-visible {
 }
 
 /* ==============================================================
-   20. Print Media Optimizations
+   20. Notification Center & Dropdown Components (Phase 11)
+   ============================================================== */
+#notificationsDropdown {
+  transition: all 0.2s ease;
+}
+#notificationsDropdown:hover {
+  background-color: var(--primary-subtle);
+  border-color: var(--primary-border) !important;
+}
+#notificationsDropdown:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+.notification-item {
+  transition: background-color 0.15s ease;
+}
+.notification-item:hover {
+  background-color: #f8fafc;
+}
+@media (max-width: 575.98px) {
+  .dropdown-menu[aria-labelledby="notificationsDropdown"] {
+    position: fixed !important;
+    top: 60px !important;
+    left: 10px !important;
+    right: 10px !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+}
+
+/* ==============================================================
+   21. Print Media Optimizations
    ============================================================== */
 @media print {
   .app-navbar,

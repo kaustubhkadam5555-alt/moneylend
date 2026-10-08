@@ -186,6 +186,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             log_activity($pdo, 'repayment_create', 'repayment', $repaymentId, 'Recorded repayment #' . $repaymentId . ' of ' . CURRENCY_SYMBOL . number_format($paymentAmount, 2) . ' on Loan #' . $formData['loan_id']);
 
+            // Safe Phase 11 Notification Hooks (Secondary to authoritative financial commit)
+            try {
+                $borrowerId = (int)$selectedLoan['borrower_id'];
+                $borrowerName = $selectedLoan['borrower_name'] ?? 'Borrower';
+                $remainingBalFormatted = CURRENCY_SYMBOL . number_format((float)$syncResult['remaining_balance'], 2);
+                $paidAmtFormatted = CURRENCY_SYMBOL . number_format($paymentAmount, 2);
+
+                // 1. Repayment Recorded Notification
+                if (get_setting('notify_repayments', '1') === '1') {
+                    create_notification($pdo, [
+                        'user_id'      => $userId ?? 1,
+                        'borrower_id'  => $borrowerId,
+                        'loan_id'      => $formData['loan_id'],
+                        'repayment_id' => $repaymentId,
+                        'type'         => 'repayment_recorded',
+                        'title'        => "Repayment of {$paidAmtFormatted} recorded",
+                        'message'      => "Repayment #{$repaymentId} of {$paidAmtFormatted} recorded for {$borrowerName} on Loan #{$formData['loan_id']}. Remaining balance: {$remainingBalFormatted}.",
+                        'severity'     => 'success',
+                        'event_key'    => "repayment_recorded:{$repaymentId}",
+                        'send_email'   => true
+                    ]);
+                }
+
+                // 2. Loan Fully Paid Notification (Generated once per loan settlement)
+                if (($syncResult['status'] === 'paid' || $syncResult['remaining_balance'] <= 0.001) && get_setting('notify_loan_paid', '1') === '1') {
+                    create_notification($pdo, [
+                        'user_id'      => $userId ?? 1,
+                        'borrower_id'  => $borrowerId,
+                        'loan_id'      => $formData['loan_id'],
+                        'repayment_id' => $repaymentId,
+                        'type'         => 'loan_paid',
+                        'title'        => "Loan #LN-{$formData['loan_id']} fully repaid",
+                        'message'      => "Loan #{$formData['loan_id']} for {$borrowerName} has been settled and fully paid.",
+                        'severity'     => 'success',
+                        'event_key'    => "loan_paid:loan_{$formData['loan_id']}",
+                        'send_email'   => true
+                    ]);
+                }
+            } catch (Throwable $notifEx) {
+                // Secondary notification failure must NEVER invalidate the successful financial record
+                error_log("Repayment notification trigger error: " . $notifEx->getMessage());
+            }
+
             // Success Flash Notification
             set_flash("success", "Repayment recorded successfully.");
 

@@ -20,10 +20,23 @@ if (str_contains($currentScript, '/borrowers/')) {
     $activePage = 'settings';
 } elseif (str_contains($currentScript, '/activity/')) {
     $activePage = 'activity';
+} elseif (str_contains($currentScript, '/notifications/')) {
+    $activePage = 'notifications';
 } elseif (str_contains($currentScript, 'dashboard.php')) {
     $activePage = 'dashboard';
 } else {
     $activePage = $activePage ?? 'dashboard';
+}
+
+$sidebarUserId = (int)($_SESSION['user_id'] ?? 1);
+$sidebarUnreadCount = 0;
+if (function_exists('getDBConnection') && function_exists('get_unread_notification_count')) {
+    try {
+        $sbPdo = getDBConnection();
+        $sidebarUnreadCount = get_unread_notification_count($sbPdo, $sidebarUserId);
+    } catch (Throwable $e) {
+        $sidebarUnreadCount = 0;
+    }
 }
 ?>
 <!-- Mobile Overlay Backdrop -->
@@ -67,6 +80,14 @@ if (str_contains($currentScript, '/borrowers/')) {
         </a>
 
         <div class="sidebar-section-title mt-3">Insights & System</div>
+
+        <a href="<?php echo BASE_URL; ?>notifications/" class="sidebar-link <?php echo ($activePage === 'notifications') ? 'active' : ''; ?>" <?php echo ($activePage === 'notifications') ? 'aria-current="page"' : ''; ?>>
+            <i class="fa-solid fa-bell"></i>
+            <span>Notifications</span>
+            <?php if ($sidebarUnreadCount > 0): ?>
+                <span class="badge bg-danger rounded-pill ms-auto px-2" style="font-size: 0.68rem;"><?php echo $sidebarUnreadCount > 99 ? '99+' : $sidebarUnreadCount; ?></span>
+            <?php endif; ?>
+        </a>
 
         <a href="<?php echo BASE_URL; ?>reports/" class="sidebar-link <?php echo ($activePage === 'reports') ? 'active' : ''; ?>" <?php echo ($activePage === 'reports') ? 'aria-current="page"' : ''; ?>>
             <i class="fa-solid fa-chart-line"></i>

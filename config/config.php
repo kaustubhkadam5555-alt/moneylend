@@ -13,6 +13,8 @@ if (!defined('APP_NAME')) {
     require_once __DIR__ . '/database.php';
     require_once __DIR__ . '/../includes/settings_helper.php';
     require_once __DIR__ . '/../includes/activity_helper.php';
+    require_once __DIR__ . '/../includes/mail_helper.php';
+    require_once __DIR__ . '/../includes/notification_helper.php';
 
     $appName = get_setting('app_name', 'MoneyLend');
     $currencySymbol = get_setting('currency_symbol', '₹');

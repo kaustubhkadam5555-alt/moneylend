@@ -364,9 +364,53 @@ The application has been verified through automated regression suites and code a
 # 3. Run Master Regression Test Suite (54 tests)
 /Applications/XAMPP/xamppfiles/bin/php scratch/test_phase75_full_regression.php
 
-# 4. Run Global PHP Syntax Lint across all files
+# 4. Run Phase 10 Advanced Features Suite (28 tests)
+/Applications/XAMPP/xamppfiles/bin/php scratch/test_phase10_advanced_features.php
+
+# 5. Run Phase 11 Notifications & Automation Suite (22 tests)
+/Applications/XAMPP/xamppfiles/bin/php scratch/test_phase11_notifications.php
+
+# 6. Run Scheduled Automation Engine CLI
+/Applications/XAMPP/xamppfiles/bin/php scripts/generate_notifications.php
+
+# 7. Run Global PHP Syntax Lint across all files
 find . -name "*.php" -not -path "*/vendor/*" -print0 | xargs -0 -n1 /Applications/XAMPP/xamppfiles/bin/php -l
 ```
+
+---
+
+## 🔔 Phase 11 — Notifications & Automation Architecture
+
+MoneyLend Phase 11 introduces a high-reliability, decoupled notification and reminder ecosystem:
+
+### 1. Internal Notification Center (`/notifications/`)
+- **Real-Time Header Dropdown:** Top navigation bell icon displays live unread counter badge with instant preview of the latest alerts.
+- **Dedicated Center:** Tabbed interface for filtering alerts by state (`All`, `Unread`, `Due Soon`, `Overdue`).
+- **Interactive Controls:** One-click "Mark as Read", "Mark All as Read", "Dismiss", and direct deep-links to associated borrower profiles and loan agreements.
+- **Strict Data Isolation:** Prepared SQL queries strictly enforce authenticated user ownership; cross-account notification tampering is prevented.
+
+### 2. Reminder Types & Idempotent Logic
+- **Due Soon Reminders:** Automatically generated when active loans enter the configurable notice window (default: 3 days prior to maturity).
+- **Due Today Alerts:** High-priority warning triggered on the exact calendar maturity date.
+- **Overdue Delinquency Notices:** Escalation notifications generated when agreements pass due date with unpaid balance. Spam-prevention interval bucket (default: every 7 days) ensures controlled reminder delivery.
+- **Repayment Confirmations:** Generated upon successful transaction commit logging collected amount, date, and updated loan balance.
+- **Loan Settlement Milestones:** Milestone alert logged when a loan reaches zero remaining balance and transitions to `Paid`.
+- **Strict Idempotency:** Uniquely keyed event hashes (`due_soon:loan_X:date`, `overdue:loan_X:date:interval_Y`) ensure repeated automation scans produce **zero duplicate records**.
+- **Financial Authority:** Notifications are strictly read-only observers and never alter financial balances or ledgers.
+
+### 3. Scheduled Automation Runner (`scripts/generate_notifications.php`)
+- **CLI-Guarded Execution:** Automation script is locked to Command Line Interface (CLI) execution to prevent unauthorized browser triggers.
+- **Cron / Task Scheduler Ready:**
+  ```bash
+  # Example daily cron configuration (runs at 08:00 AM daily):
+  0 8 * * * /Applications/XAMPP/xamppfiles/bin/php /Applications/XAMPP/xamppfiles/htdocs/moneylend/scripts/generate_notifications.php >> /dev/null 2>&1
+  ```
+- **Execution Options:** Supports `--verbose`, `--date=YYYY-MM-DD` (simulation), and `--cleanup` flags.
+
+### 4. Optional Email Architecture & Safe Development Mode
+- **Decoupled Architecture:** Core financial actions and internal notifications function reliably regardless of external mail availability.
+- **Safe Development Mode (`MAIL_MODE=log`):** In local XAMPP environments, outgoing notifications are safely logged to `logs/mail.log` with recipients and message summaries without transmitting network packets or requiring live SMTP credentials.
+- **Environment Isolation:** Controlled via `.env` (derived from `.env.example`). Credentials and `.env` are strictly excluded from Git revision control.
 
 ---
 
@@ -387,6 +431,7 @@ find . -name "*.php" -not -path "*/vendor/*" -print0 | xargs -0 -n1 /Application
 - [x] **Phase 8: GitHub & Release Setup** — Final repository audit, git hygiene, documentation finalization, release notes, and Version 1.0.0 release preparation.
 - [x] **Phase 9: Professional UI/UX Enhancement** — Modern dark-slate aesthetic, fluid responsive design system, animated micro-interactions, accessible status badges, and enhanced data visualizations.
 - [x] **Phase 10: Advanced MoneyLend Management Features** — Centralized activity and audit logging trail, official borrower & loan financial statements, print-ready document layouts, multi-parameter search and filtering, and real-time dashboard portfolio intelligence widgets.
+- [x] **Phase 11: Notifications & Automation** — Internal notification center, navbar bell unread counter, due-date and overdue reminder engine, idempotent CLI automation runner, notification preferences, and safe development email architecture.
 
 ---
 
@@ -394,10 +439,9 @@ find . -name "*.php" -not -path "*/vendor/*" -print0 | xargs -0 -n1 /Application
 
 Planned future enhancements for upcoming major versions:
 - **Role-Based Access Control (RBAC):** Dedicated roles for View-Only Auditors, Loan Officers, and Super Administrators.
-- **SMS & Email Payment Reminders:** Automated notification dispatch via Twilio / SendGrid for loans approaching or past due dates.
+- **SMS Gateway Integration:** Real-time SMS alerts via Twilio or MSG91 for borrowers approaching or past due dates.
 - **Installment Amortization Schedules:** Support for Reducing Balance and Equated Monthly Installment (EMI) schedules.
 - **Automated Database Backups:** One-click scheduled SQL dumps with encrypted local or cloud storage.
-- **Administrative Audit Log:** Event ledger capturing all administrative modifications, deletions, and logins with IP address tracking.
 - **Progressive Web App (PWA):** Offline shell caching and mobile home-screen installability.
 
 ---

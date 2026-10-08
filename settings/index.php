@@ -216,6 +216,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
+
+        // -------------------------------------------------------------
+        // ACTION 4: UPDATE NOTIFICATION PREFERENCES
+        // -------------------------------------------------------------
+        elseif ($action === 'update_notification_settings') {
+            $activeTab = 'notifications';
+            $notifyDueSoon    = isset($_POST['notify_due_soon']) ? '1' : '0';
+            $notifyDueToday   = isset($_POST['notify_due_today']) ? '1' : '0';
+            $notifyOverdue    = isset($_POST['notify_overdue']) ? '1' : '0';
+            $notifyRepayments = isset($_POST['notify_repayments']) ? '1' : '0';
+            $notifyLoanPaid   = isset($_POST['notify_loan_paid']) ? '1' : '0';
+            $dueDays          = max(1, min(30, (int)($_POST['reminder_due_days'] ?? 3)));
+            $overdueInterval  = max(1, min(60, (int)($_POST['reminder_overdue_interval'] ?? 7)));
+
+            $notifSettings = [
+                'notify_due_soon'           => $notifyDueSoon,
+                'notify_due_today'          => $notifyDueToday,
+                'notify_overdue'            => $notifyOverdue,
+                'notify_repayments'         => $notifyRepayments,
+                'notify_loan_paid'          => $notifyLoanPaid,
+                'reminder_due_days'         => (string)$dueDays,
+                'reminder_overdue_interval' => (string)$overdueInterval
+            ];
+
+            if (update_settings($notifSettings)) {
+                log_activity($pdo, 'settings_update', 'settings', null, 'Updated notification preferences');
+                set_flash('success', "Notification preferences saved successfully.");
+                redirect(BASE_URL . "settings/index.php?tab=notifications");
+            } else {
+                $errors[] = "Unable to save notification preferences. Please try again.";
+            }
+        }
     }
 }
 
@@ -295,6 +327,11 @@ require_once __DIR__ . '/../includes/navbar.php';
         <li class="nav-item" role="presentation">
             <a class="nav-link <?php echo ($activeTab === 'security') ? 'active' : ''; ?>" href="?tab=security">
                 <i class="fa-solid fa-shield-halved me-2"></i> Security & Password
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link <?php echo ($activeTab === 'notifications') ? 'active' : ''; ?>" href="?tab=notifications">
+                <i class="fa-solid fa-bell me-2"></i> Notifications & Automation
             </a>
         </li>
     </ul>
@@ -685,6 +722,175 @@ require_once __DIR__ . '/../includes/navbar.php';
                         <div class="d-flex align-items-start gap-2">
                             <i class="fa-solid fa-check text-success mt-1"></i>
                             <div><strong>Prepared Statements:</strong> All database queries use parameterized PDO bindings to mitigate SQL injection.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- Tab 4: Notifications & Automation -->
+    <?php elseif ($activeTab === 'notifications'): ?>
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="card content-card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom py-3 px-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="brand-icon-box" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                <i class="fa-solid fa-bell"></i>
+                            </span>
+                            <div>
+                                <h2 class="content-card-title mb-0">Notification Preferences & Reminders</h2>
+                                <span class="text-muted small">Configure automated alerts for maturities, overdue installments, and receipts.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="POST" action="<?php echo BASE_URL; ?>settings/index.php?tab=notifications" class="needs-validation" novalidate>
+                            <?php echo csrf_field(); ?>
+                            <input type="hidden" name="form_action" value="update_notification_settings">
+
+                            <h5 class="fw-bold text-dark mb-3 pb-2 border-bottom d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-clock-rotate-left text-primary"></i> Due-Date & Overdue Triggers
+                            </h5>
+
+                            <!-- Due Soon Alert -->
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" role="switch" id="notify_due_soon" name="notify_due_soon" value="1" <?php echo (($settings['notify_due_soon'] ?? '1') === '1') ? 'checked' : ''; ?>>
+                                <label class="form-check-label fw-semibold text-dark" for="notify_due_soon">
+                                    Enable "Due Soon" Reminders
+                                </label>
+                                <div class="text-muted small">Generate upcoming reminder when a loan approaches its maturity date.</div>
+                            </div>
+
+                            <div class="row g-2 align-items-center mb-4 ps-4">
+                                <div class="col-auto">
+                                    <label for="reminder_due_days" class="col-form-label small fw-semibold text-secondary">Advance notice threshold:</label>
+                                </div>
+                                <div class="col-auto" style="width: 100px;">
+                                    <input type="number" class="form-control form-control-sm" id="reminder_due_days" name="reminder_due_days" min="1" max="30" value="<?php echo htmlspecialchars($settings['reminder_due_days'] ?? '3'); ?>">
+                                </div>
+                                <div class="col-auto">
+                                    <span class="text-muted small">day(s) before due date</span>
+                                </div>
+                            </div>
+
+                            <!-- Due Today Alert -->
+                            <div class="form-check form-switch mb-4">
+                                <input class="form-check-input" type="checkbox" role="switch" id="notify_due_today" name="notify_due_today" value="1" <?php echo (($settings['notify_due_today'] ?? '1') === '1') ? 'checked' : ''; ?>>
+                                <label class="form-check-label fw-semibold text-dark" for="notify_due_today">
+                                    Enable "Due Today" Alert
+                                </label>
+                                <div class="text-muted small">Generate high-priority notification on the exact calendar due date of an active loan.</div>
+                            </div>
+
+                            <!-- Overdue Alert -->
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" role="switch" id="notify_overdue" name="notify_overdue" value="1" <?php echo (($settings['notify_overdue'] ?? '1') === '1') ? 'checked' : ''; ?>>
+                                <label class="form-check-label fw-semibold text-dark" for="notify_overdue">
+                                    Enable "Overdue Loan" Notifications
+                                </label>
+                                <div class="text-muted small">Generate warning notifications when loan agreements pass maturity with outstanding balance.</div>
+                            </div>
+
+                            <div class="row g-2 align-items-center mb-4 ps-4">
+                                <div class="col-auto">
+                                    <label for="reminder_overdue_interval" class="col-form-label small fw-semibold text-secondary">Recurring reminder interval:</label>
+                                </div>
+                                <div class="col-auto" style="width: 100px;">
+                                    <input type="number" class="form-control form-control-sm" id="reminder_overdue_interval" name="reminder_overdue_interval" min="1" max="60" value="<?php echo htmlspecialchars($settings['reminder_overdue_interval'] ?? '7'); ?>">
+                                </div>
+                                <div class="col-auto">
+                                    <span class="text-muted small">day(s) between consecutive notices (prevents spam)</span>
+                                </div>
+                            </div>
+
+                            <h5 class="fw-bold text-dark mb-3 pb-2 border-bottom d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-receipt text-success"></i> Transaction Confirmation Alerts
+                            </h5>
+
+                            <!-- Repayment Logged Alert -->
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" role="switch" id="notify_repayments" name="notify_repayments" value="1" <?php echo (($settings['notify_repayments'] ?? '1') === '1') ? 'checked' : ''; ?>>
+                                <label class="form-check-label fw-semibold text-dark" for="notify_repayments">
+                                    Notify when Repayment is Recorded
+                                </label>
+                                <div class="text-muted small">Create an internal confirmation notice when an installment is successfully committed.</div>
+                            </div>
+
+                            <!-- Loan Paid Alert -->
+                            <div class="form-check form-switch mb-4">
+                                <input class="form-check-input" type="checkbox" role="switch" id="notify_loan_paid" name="notify_loan_paid" value="1" <?php echo (($settings['notify_loan_paid'] ?? '1') === '1') ? 'checked' : ''; ?>>
+                                <label class="form-check-label fw-semibold text-dark" for="notify_loan_paid">
+                                    Notify when Loan is Fully Settled
+                                </label>
+                                <div class="text-muted small">Generate milestone alert when a loan reaches zero remaining balance and status becomes Paid.</div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                    <i class="fa-solid fa-floppy-disk me-1"></i> Save Notification Preferences
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Status & Architecture Details -->
+            <div class="col-lg-5">
+                <!-- Automation Engine Info -->
+                <div class="card content-card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-robot text-primary"></i> Scheduled Automation
+                        </h6>
+                    </div>
+                    <div class="card-body p-3 small text-muted">
+                        <p class="mb-2">Automated checks can be run on-demand or scheduled via OS cron / Task Scheduler using the CLI runner:</p>
+                        <div class="p-2 bg-light border rounded text-dark font-monospace mb-3" style="font-size: 0.75rem;">
+                            php scripts/generate_notifications.php
+                        </div>
+                        <div class="d-flex align-items-start gap-2 mb-2">
+                            <i class="fa-solid fa-check text-success mt-1"></i>
+                            <div><strong>Idempotent:</strong> Running the CLI script repeatedly on the same day never produces duplicate alerts.</div>
+                        </div>
+                        <div class="d-flex align-items-start gap-2 mb-2">
+                            <i class="fa-solid fa-check text-success mt-1"></i>
+                            <div><strong>Read-Only Observer:</strong> Automation reads loan balances without modifying financial calculations.</div>
+                        </div>
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fa-solid fa-check text-success mt-1"></i>
+                            <div><strong>CLI Guarded:</strong> Script requires CLI execution or authorized execution to prevent unauthorized browser access.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Architecture Card -->
+                <div class="card content-card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-envelope text-info"></i> Email Delivery Architecture
+                        </h6>
+                    </div>
+                    <div class="card-body p-3 small text-muted">
+                        <?php 
+                        $mailMode = strtolower(trim((string)get_env_var('MAIL_MODE', 'log')));
+                        ?>
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                            <span>Delivery Mode (<code>MAIL_MODE</code>):</span>
+                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle text-uppercase">
+                                <?php echo htmlspecialchars($mailMode); ?>
+                            </span>
+                        </div>
+                        <p class="mb-2">
+                            In local XAMPP development, emails are safely logged to <code>logs/mail.log</code> without sending live messages or leaking credentials.
+                        </p>
+                        <div class="text-center pt-2">
+                            <a href="<?php echo BASE_URL; ?>notifications/" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="fa-solid fa-bell me-1"></i> Open Notification Center
+                            </a>
                         </div>
                     </div>
                 </div>
